@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>The Distillery</title>
+<style>
+body {
+  font-family: Georgia;
+}
+
+#dropTarget {
+  width: 500px;
+  height: 500px;
+  border: solid 1px #ccc;
+  background: #ccc;
+}
+</style>
+
+
+<body>
+  <h1>The Distillery</h1>
+  <div id="dropTarget"></div>
+
+</body>
+
+
+<script type="text/javascript">
+
+var dropTarget = document.getElementById("dropTarget");
+
+dropTarget.addEventListener("dragenter", dropKill, false);
+dropTarget.addEventListener("dragexit", dropKill, false);
+dropTarget.addEventListener("dragover", dropKill, false);
+dropTarget.addEventListener("drop", drop, false);
+
+function dropKill(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+}
+
+function drop(evt) {
+  evt.stopPropagation();
+  evt.preventDefault();
+
+  var files = evt.dataTransfer.files;
+
+  if (files.length > 0) handleFiles(files);
+}
+
+function handleFiles(files) {
+  var file = files[0];
+  var reader = new FileReader();
+  reader.onload = handleReaderLoad;
+  reader.readAsText(file);
+}
+
+function handleReaderLoad(evt) {
+  var data = JSON.parse(evt.target.result);
+  console.log(data);
+}
+</script>
