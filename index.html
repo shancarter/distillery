@@ -4,27 +4,125 @@
 <style>
 body {
   font-family: Georgia;
+  margin: 0;
+  padding: 0;
 }
 
-#dropTarget {
-  width: 500px;
-  height: 500px;
-  border: solid 1px #ccc;
-  background: #ccc;
+h3 {
+  margin: 0;
+  padding: 0;
 }
+
+.head {
+  background: #ddd;
+  height: 30px;
+}
+
+.topojsonSettings {
+  background: #cc0;
+  height: 30px;
+}
+
+.mapSettings {
+  position: absolute;
+  width: 200px;
+  left: 0;
+  top: 80px;
+  bottom: 20px;
+  border: solid 1px red;
+}
+
+.mapContainer {
+  position: absolute;
+  left: 220px;
+  right: 20px;
+  top: 80px;
+  bottom: 20px;
+  background: #fac;
+}
+
+.map {
+  border: solid 1px #cc0;
+}
+
+.map path {
+  fill: none;
+  stroke: red;
+}
+
+
 </style>
 
+<div class="head">
+  <span>The Distillery</span>
+  <span>A GUI for topojson</span>
+</div>
+<div class="topojsonSettings">
+  topojson settings
+</div>
+<div class="mapContainer"></div>
+<div class="mapSettings">
+  <h3>Map Settings</h3>
+</div>
 
-<body>
-  <h1>The Distillery</h1>
-  <div id="dropTarget"></div>
-
-</body>
 
 
+<script type="text/javascript" src="lib/d3.v3.min.js"></script>
 <script type="text/javascript">
+var width = 500,
+    height = 500;
 
-var dropTarget = document.getElementById("dropTarget");
+var projection = d3.geo.albers();
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var mapContainer = d3.select(".mapContainer");
+
+var svg = mapContainer.append("svg")
+    .attr("class", "map")
+    .attr("width", width)
+    .attr("height", height);
+
+
+function resize() {
+  var bbox = mapContainer.node().getBoundingClientRect();
+  width = bbox.width;
+  height = bbox.height;
+  svg.attr("width", width).attr("height", height);
+}
+
+function drawMap(geoJSON) {
+  projection
+      .scale(1)
+      .translate([0, 0]);
+
+  var b = path.bounds(geoJSON),
+      s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+      t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+
+  projection
+      .scale(s)
+      .translate(t);
+
+  var feature = svg.selectAll("path")
+        .data(geoJSON.geometries);
+
+  feature.enter().append("path");
+
+  feature.attr("d", path);
+}
+
+
+// d3.select("window").on("onresize", function() {
+//   console.log("resize", d3.event)
+     resize();
+// });
+
+window.onresize = resize;
+
+// Drag and drop file
+var dropTarget = document;
 
 dropTarget.addEventListener("dragenter", dropKill, false);
 dropTarget.addEventListener("dragexit", dropKill, false);
@@ -39,9 +137,7 @@ function dropKill(evt) {
 function drop(evt) {
   evt.stopPropagation();
   evt.preventDefault();
-
   var files = evt.dataTransfer.files;
-
   if (files.length > 0) handleFiles(files);
 }
 
@@ -54,6 +150,7 @@ function handleFiles(files) {
 
 function handleReaderLoad(evt) {
   var data = JSON.parse(evt.target.result);
-  console.log(data);
+  resize();
+  drawMap(data);
 }
 </script>
