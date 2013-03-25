@@ -3,7 +3,7 @@
 <title>The Distillery</title>
 <style>
 body {
-  font-family: Georgia;
+  font-family: "Helvetica Neue", Helvetica, Arial;
   margin: 0;
   padding: 0;
 }
@@ -14,39 +14,67 @@ h3 {
 }
 
 .head {
-  background: #ddd;
-  height: 30px;
+  font-size: 18px;
+  line-height: 18px;
+  padding: 20px;
+  text-align: center;
 }
 
 .topojsonSettings {
-  background: #cc0;
-  height: 30px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 14px;
+  padding: 15px 20px;
+  background: #f0f0f0;
+  border-top: solid 1px #ddd;
+  border-bottom: solid 1px #ddd;
 }
 
-.mapSettings {
-  position: absolute;
-  width: 200px;
-  left: 0;
-  top: 80px;
-  bottom: 20px;
-  border: solid 1px red;
+.bin {
+  display: inline-block;
+  padding: 8px;
+  font-weight: bold;
+}
+
+.opts {
+  display: inline-block;
+  padding: 8px 10px 8px 0;
+  margin-right: 10px;
+  color: #666;
+}
+
+.action {
+  display: inline-block;
+  padding: 8px 10px;
+  margin: 0 10px;
+  background: #666;
+  color: white;
+  border-radius: 4px;
+}
+
+.value {
+  border: solid 1px #dedede;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 8px 10px;
+  margin-left: 6px;
+  color: #333;
+
 }
 
 .mapContainer {
   position: absolute;
-  left: 220px;
-  right: 20px;
-  top: 80px;
-  bottom: 20px;
-  background: #fac;
+  left: 10px;
+  right: 10px;
+  top: 130px;
+  bottom: 10px;
 }
 
 .map {
-  border: solid 1px #cc0;
 }
 
 .map path {
-  fill: none;
+  fill: rgba(255, 255, 255, 0.2);
   stroke: red;
 }
 
@@ -55,14 +83,32 @@ h3 {
 
 <div class="head">
   <span>The Distillery</span>
-  <span>A GUI for topojson</span>
 </div>
 <div class="topojsonSettings">
-  topojson settings
+  <span class="bin">topojson</span>
+  <span class="opts">--quantization <span class="value">1e4</span></span>
+  <span class="opts">--simplify <span class="value">1e5</span></span>
+  <span class="opts">--properties <span class="value">none</span></span>
+  <span class="opts">--id-property <span class="value">iso-whatever</span></span>
+  <span class="action">Save</span>
 </div>
+<!--
+-o, --out output TopoJSON file name
+-q, --quantization maximum number of differentiable points along either dimension
+-s, --simplify precision threshold for Visvalingam simplification, in steradians
+--simplify-proportion proportion of points to retain for Visvalingam simplification
+--cartesian assume Cartesian coordinates
+--spherical assume spherical coordinates
+--force-clockwise force clockwise exterior rings and counterclockwise interior rings
+--id-property name of feature property to promote to geometry id
+-p, --properties feature properties to preserve; no name preserves all properties
+-e, --external-properties CSV or TSV file to join properties (by id) to output features
+--shapefile-encoding character encoding for reading shapefile properties
+-x, --longitude name of the longitude property for CSV or TSV geometry input
+-y, --latitude name of the latitude property for CSV or TSV geometry input
+ -->
+
 <div class="mapContainer"></div>
-<div class="mapSettings">
-  <h3>Map Settings</h3>
 </div>
 
 
@@ -72,7 +118,7 @@ h3 {
 var width = 500,
     height = 500;
 
-var projection = d3.geo.albers();
+var projection = d3.geo.mercator();
 
 var path = d3.geo.path()
     .projection(projection);
@@ -109,6 +155,8 @@ function drawMap(geoJSON) {
         .data(geoJSON.geometries);
 
   feature.enter().append("path");
+
+  feature.exit().remove();
 
   feature.attr("d", path);
 }
