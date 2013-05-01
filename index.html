@@ -59,10 +59,9 @@ h3 {
   padding: 8px 10px;
   margin-left: 6px;
   color: #333;
-
 }
 
-.mapContainer {
+.map-container {
   position: absolute;
   left: 10px;
   right: 10px;
@@ -70,26 +69,32 @@ h3 {
   bottom: 10px;
 }
 
+.map-controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 200px;
+  border: solid 1px #ddd;
+}
+
 .map {
 }
 
 .map path {
-  fill: rgba(255, 255, 255, 0.2);
+  fill: rgba(255, 200, 200, 0.4);
   stroke: red;
 }
-
 
 </style>
 
 <div class="head">
   <span>The Distillery</span>
+  <button class="sample-geojson">sample geojson</button>
 </div>
 <div class="topojsonSettings">
   <span class="bin">topojson</span>
   <span class="opts">--quantization <span class="value">1e4</span></span>
   <span class="opts">--simplify <span class="value">1e5</span></span>
-  <span class="opts">--properties <span class="value">none</span></span>
-  <span class="opts">--id-property <span class="value">iso-whatever</span></span>
   <span class="action">Save</span>
 </div>
 <!--
@@ -108,12 +113,11 @@ h3 {
 -y, --latitude name of the latitude property for CSV or TSV geometry input
  -->
 
-<div class="mapContainer"></div>
+<div class="map-container"></div>
 </div>
 
-
-
 <script type="text/javascript" src="lib/d3.v3.min.js"></script>
+<script type="text/javascript" src="assets/bundle.js"></script>
 <script type="text/javascript">
 var width = 500,
     height = 500;
@@ -123,12 +127,37 @@ var projection = d3.geo.mercator();
 var path = d3.geo.path()
     .projection(projection);
 
-var mapContainer = d3.select(".mapContainer");
+var inputData,
+    geoObjects = [];
+
+var argv = {
+  q: 1e4,
+  s: 0
+}
+
+var mapContainer = d3.select(".map-container");
+
+var mapControlsContainer = mapContainer.append("div")
+    .attr("class", "map-controls");
 
 var svg = mapContainer.append("svg")
     .attr("class", "map")
     .attr("width", width)
     .attr("height", height);
+
+var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal"];
+
+var projectionSelect = mapControlsContainer.append("select")
+    .on("change", function() {
+      projection = (d3.geo[projectionSelect.node().value])();
+      path = d3.geo.path().projection(projection);
+      drawMap();
+    });
+
+var projections = projectionSelect.selectAll("option")
+    .data(availableProjections)
+  .enter().append("option")
+    .text(function(d) { return d; })
 
 
 function resize() {
@@ -138,12 +167,41 @@ function resize() {
   svg.attr("width", width).attr("height", height);
 }
 
-function drawMap(geoJSON) {
+function processData(data) {
+  inputData = data;
+
+  if (data.type === "Topology") {
+
+    // Convert GeoJSON to TopoJSON.
+    // var object = topojson.topology(objects, options);
+
+    // for (obj in inputData.objects) {
+    //   geoObjects.push(topojson.feature(inputData, inputData.objects[obj]));
+    // }
+  } else {
+    var options = {
+      "verbose": true,
+      "quantization": 1e5,
+      "coordinate-system": "auto",
+      "id": "id"
+    };
+    var object = topojson.topology(inputData, options);
+    console.log(object)
+    geoObjects.push(object);
+  }
+  drawMap();
+}
+
+function drawMap() {
+  resize();
   projection
       .scale(1)
       .translate([0, 0]);
 
-  var b = path.bounds(geoJSON),
+  console.log(geoObjects[0].objects)
+  var geoObject = topojson.feature(geoObjects[0], geoObjects[0].objects)
+  console.log(geoObject)
+  var b = path.bounds(geoObject),
       s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
       t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
@@ -152,23 +210,16 @@ function drawMap(geoJSON) {
       .translate(t);
 
   var feature = svg.selectAll("path")
-        .data(geoJSON.geometries);
+        .data(geoObject.geometries);
 
   feature.enter().append("path");
-
   feature.exit().remove();
-
   feature.attr("d", path);
 }
 
-
-// d3.select("window").on("onresize", function() {
-//   console.log("resize", d3.event)
-     resize();
-// });
-
-window.onresize = resize;
-
+window.onresize = function() {
+  resize();
+}
 // Drag and drop file
 var dropTarget = document;
 
@@ -198,7 +249,23 @@ function handleFiles(files) {
 
 function handleReaderLoad(evt) {
   var data = JSON.parse(evt.target.result);
-  resize();
-  drawMap(data);
+  processData(data);
 }
+
+//
+// Samples
+//
+
+d3.select(".sample-geojson").on('click', function(){
+  d3.json("samples/states.json", function(json) {
+    processData(json);
+  })
+});
+
+d3.select(".sample-topojson").on('click', function(){
+  d3.json("samples/topo.json", function(json) {
+    processData(json);
+  })
+});
+
 </script>

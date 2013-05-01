@@ -1,6 +1,5 @@
 var topojson = require("topojson");
 
-var txt = document.createTextNode("Hello World");
-document.body.appendChild(txt);
+window.tj = topojson;
 
-console.log(this, topojson)
+console.log(this, topojson);

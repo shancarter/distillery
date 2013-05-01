@@ -1,14 +1,24 @@
 ;(function(e,t,n,r){function i(r){if(!n[r]){if(!t[r]){if(e)return e(r);throw new Error("Cannot find module '"+r+"'")}var s=n[r]={exports:{}};t[r][0](function(e){var n=t[r][1][e];return i(n?n:e)},s,s.exports)}return n[r].exports}for(var s=0;s<r.length;s++)i(r[s]);return i})(typeof require!=="undefined"&&require,{1:[function(require,module,exports){
 var topojson = require("topojson");
 
-var txt = document.createTextNode("Hello World");
-document.body.appendChild(txt);
+window.topojson = topojson;
 
-console.log(this, topojson)
+console.log(this, topojson);
+
 },{"topojson":2}],2:[function(require,module,exports){
 var fs = require("fs");
 
-var topojson = module.exports = (function() {
+var topojson = module.exports = require("./topojson");
+topojson.topology = require("./lib/topojson/topology");
+topojson.simplify = require("./lib/topojson/simplify");
+topojson.filter = require("./lib/topojson/filter");
+topojson.bind = require("./lib/topojson/bind");
+
+},{"fs":3,"./topojson":4,"./lib/topojson/topology":5,"./lib/topojson/simplify":6,"./lib/topojson/filter":7,"./lib/topojson/bind":8}],3:[function(require,module,exports){
+// nothing to see here... no file methods for the browser
+
+},{}],4:[function(require,module,exports){
+module.exports = (function() {
 
   function merge(topology, arcs) {
     var arcsByEnd = {},
@@ -155,6 +165,24 @@ var topojson = module.exports = (function() {
     return object(topology, {type: "MultiLineString", arcs: merge(topology, arcs)});
   }
 
+  function featureOrCollection(topology, o) {
+    return o.type === "GeometryCollection" ? {
+      type: "FeatureCollection",
+      features: o.geometries.map(function(o) { return feature(topology, o); })
+    } : feature(topology, o);
+  }
+
+  function feature(topology, o) {
+    var f = {
+      type: "Feature",
+      id: o.id,
+      properties: o.properties || {},
+      geometry: object(topology, o)
+    };
+    if (o.id == null) delete f.id;
+    return f;
+  }
+
   function object(topology, o) {
     var tf = topology.transform,
         kx = tf.scale[0],
@@ -194,12 +222,10 @@ var topojson = module.exports = (function() {
     }
 
     function geometry(o) {
-      var t = o.type, g = t === "GeometryCollection" ? {type: t, geometries: o.geometries.map(geometry)}
+      var t = o.type;
+      return t === "GeometryCollection" ? {type: t, geometries: o.geometries.map(geometry)}
           : t in geometryType ? {type: t, coordinates: geometryType[t](o)}
-          : {type: null};
-      if ("id" in o) g.id = o.id;
-      if ("properties" in o) g.properties = o.properties;
-      return g;
+          : null;
     }
 
     var geometryType = {
@@ -265,22 +291,14 @@ var topojson = module.exports = (function() {
   }
 
   return {
-    version: "0.0.38",
+    version: "1.0.0",
     mesh: mesh,
-    object: object,
+    feature: featureOrCollection,
     neighbors: neighbors
   };
 })();
-;
-topojson.topology = require("./lib/topojson/topology");
-topojson.simplify = require("./lib/topojson/simplify");
-topojson.filter = require("./lib/topojson/filter");
-topojson.bind = require("./lib/topojson/bind");
 
-},{"fs":3,"./lib/topojson/topology":4,"./lib/topojson/simplify":5,"./lib/topojson/filter":6,"./lib/topojson/bind":7}],3:[function(require,module,exports){
-// nothing to see here... no file methods for the browser
-
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var type = require("./type"),
     systems = require("./coordinate-systems");
 
@@ -397,8 +415,15 @@ module.exports = function(objects, options) {
   }
 
   // Compute quantization scaling factors.
-  kx = x1 - x0 ? (Q - 1) / (x1 - x0) : 1;
-  ky = y1 - y0 ? (Q - 1) / (y1 - y0) : 1;
+  if (Q) {
+    kx = x1 - x0 ? (Q - 1) / (x1 - x0) : 1;
+    ky = y1 - y0 ? (Q - 1) / (y1 - y0) : 1;
+  } else {
+    console.warn("quantization: disabled; assuming inputs already quantized");
+    Q = x1 + 1;
+    kx = ky = 1;
+    x0 = y0 = 0;
+  }
 
   if (verbose) {
     var qx0 = quantizeX(x0) * (1 / kx) + x0,
@@ -652,7 +677,7 @@ function equal(a, b) {
   return true;
 }
 
-},{"./type":8,"./coordinate-systems":9}],5:[function(require,module,exports){
+},{"./type":9,"./coordinate-systems":10}],6:[function(require,module,exports){
 var minHeap = require("./min-heap"),
     systems = require("./coordinate-systems");
 
@@ -784,7 +809,7 @@ function transformRelative(transform) {
   };
 }
 
-},{"./min-heap":10,"./coordinate-systems":9}],8:[function(require,module,exports){
+},{"./min-heap":11,"./coordinate-systems":10}],9:[function(require,module,exports){
 module.exports = function(types) {
   for (var type in typeDefaults) {
     if (!(type in types)) {
@@ -878,7 +903,7 @@ var typeObjects = {
   FeatureCollection: 1
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = function() {
   var heap = {},
       array = [];
@@ -944,13 +969,13 @@ function compare(a, b) {
   return a[1].area - b[1].area;
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 module.exports = {
   cartesian: require("./cartesian"),
   spherical: require("./spherical")
 };
 
-},{"./spherical":11,"./cartesian":12}],6:[function(require,module,exports){
+},{"./cartesian":12,"./spherical":13}],7:[function(require,module,exports){
 var type = require("./type"),
     prune = require("./prune"),
     systems = require("./coordinate-systems"),
@@ -1021,7 +1046,7 @@ module.exports = function(topology, options) {
   }
 
   function ringArea(ring) {
-    return system.ringArea(topojson.object(topology, {type: "Polygon", arcs: [ring]}).coordinates[0]);
+    return system.ringArea(topojson.feature(topology, {type: "Polygon", arcs: [ring]}).geometry.coordinates[0]);
   }
 };
 
@@ -1034,7 +1059,7 @@ function reverse(ring) {
 
 function noop() {}
 
-},{"./type":8,"./prune":13,"./coordinate-systems":9,"../../":2}],7:[function(require,module,exports){
+},{"./type":9,"./prune":14,"./coordinate-systems":10,"../../":2}],8:[function(require,module,exports){
 var type = require("./type"),
     topojson = require("../../");
 
@@ -1064,7 +1089,40 @@ module.exports = function(topology, propertieById) {
 
 function noop() {}
 
-},{"./type":8,"../../":2}],11:[function(require,module,exports){
+},{"./type":9,"../../":2}],12:[function(require,module,exports){
+exports.name = "cartesian";
+exports.formatDistance = formatDistance;
+exports.ringArea = ringArea;
+exports.triangleArea = triangleArea;
+exports.distance = distance;
+
+function formatDistance(d) {
+  return d.toString();
+}
+
+function ringArea(ring) {
+  var i = 0,
+      n = ring.length,
+      area = ring[n - 1][1] * ring[0][0] - ring[n - 1][0] * ring[0][1];
+  while (++i < n) {
+    area += ring[i - 1][1] * ring[i][0] - ring[i - 1][0] * ring[i][1];
+  }
+  return area * .5;
+}
+
+function triangleArea(triangle) {
+  return Math.abs(
+    (triangle[0][0] - triangle[2][0]) * (triangle[1][1] - triangle[0][1])
+    - (triangle[0][0] - triangle[1][0]) * (triangle[2][1] - triangle[0][1])
+  );
+}
+
+function distance(x0, y0, x1, y1) {
+  var dx = x0 - x1, dy = y0 - y1;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+},{}],13:[function(require,module,exports){
 var π = Math.PI,
     π_4 = π / 4,
     radians = π / 180;
@@ -1146,40 +1204,7 @@ function haversin(x) {
   return (x = Math.sin(x / 2)) * x;
 }
 
-},{}],12:[function(require,module,exports){
-exports.name = "cartesian";
-exports.formatDistance = formatDistance;
-exports.ringArea = ringArea;
-exports.triangleArea = triangleArea;
-exports.distance = distance;
-
-function formatDistance(d) {
-  return d.toString();
-}
-
-function ringArea(ring) {
-  var i = 0,
-      n = ring.length,
-      area = ring[n - 1][1] * ring[0][0] - ring[n - 1][0] * ring[0][1];
-  while (++i < n) {
-    area += ring[i - 1][1] * ring[i][0] - ring[i - 1][0] * ring[i][1];
-  }
-  return area * .5;
-}
-
-function triangleArea(triangle) {
-  return Math.abs(
-    (triangle[0][0] - triangle[2][0]) * (triangle[1][1] - triangle[0][1])
-    - (triangle[0][0] - triangle[1][0]) * (triangle[2][1] - triangle[0][1])
-  );
-}
-
-function distance(x0, y0, x1, y1) {
-  var dx = x0 - x1, dy = y0 - y1;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var type = require("./type"),
     topojson = require("../../");
 
@@ -1238,5 +1263,5 @@ module.exports = function(topology, options) {
 
 function noop() {}
 
-},{"./type":8,"../../":2}]},{},[1])
+},{"./type":9,"../../":2}]},{},[1])
 ;
