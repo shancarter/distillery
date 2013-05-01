@@ -1,0 +1,11 @@
+{
+  "name": "distillery",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "brfs": "0",
+    "browserify": "2",
+    "d3": "3",
+    "topojson": "1"
+  }
+}

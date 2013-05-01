@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <title>The Distillery</title>
 <style>
+
 body {
   font-family: "Helvetica Neue", Helvetica, Arial;
   margin: 0;
@@ -116,9 +117,9 @@ h3 {
 <div class="map-container"></div>
 </div>
 
-<script type="text/javascript" src="lib/d3.v3.min.js"></script>
-<script type="text/javascript" src="assets/bundle.js"></script>
-<script type="text/javascript">
+<script src="lib.js"></script>
+<script>
+
 var width = 500,
     height = 500;
 
@@ -128,7 +129,7 @@ var path = d3.geo.path()
     .projection(projection);
 
 var inputData,
-    geoObjects = [];
+    topology;
 
 var argv = {
   q: 1e4,
@@ -180,14 +181,12 @@ function processData(data) {
     // }
   } else {
     var options = {
-      "verbose": true,
-      "quantization": 1e5,
-      "coordinate-system": "auto",
-      "id": "id"
+      // "verbose": true,
+      // "quantization": 1e5,
+      // "coordinate-system": "auto",
+      // "id": "id"
     };
-    var object = topojson.topology(inputData, options);
-    console.log(object)
-    geoObjects.push(object);
+    topology = topojson.topology({anonymous: inputData}, options); // TODO replace anonymous with file name
   }
   drawMap();
 }
@@ -198,10 +197,9 @@ function drawMap() {
       .scale(1)
       .translate([0, 0]);
 
-  console.log(geoObjects[0].objects)
-  var geoObject = topojson.feature(geoObjects[0], geoObjects[0].objects)
-  console.log(geoObject)
-  var b = path.bounds(geoObject),
+  var feature = topojson.feature(topology, topology.objects.anonymous); // TODO draw which feature?
+
+  var b = path.bounds(feature),
       s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
       t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
@@ -210,7 +208,7 @@ function drawMap() {
       .translate(t);
 
   var feature = svg.selectAll("path")
-        .data(geoObject.geometries);
+      .data(feature.features); // TODO assumes feature is a FeatureCollection
 
   feature.enter().append("path");
   feature.exit().remove();
@@ -219,7 +217,8 @@ function drawMap() {
 
 window.onresize = function() {
   resize();
-}
+};
+
 // Drag and drop file
 var dropTarget = document;
 
@@ -256,14 +255,14 @@ function handleReaderLoad(evt) {
 // Samples
 //
 
-d3.select(".sample-geojson").on('click', function(){
-  d3.json("samples/states.json", function(json) {
+d3.select(".sample-geojson").on("click", function(){
+  d3.json("samples/states.json", function(error, json) {
     processData(json);
   })
 });
 
-d3.select(".sample-topojson").on('click', function(){
-  d3.json("samples/topo.json", function(json) {
+d3.select(".sample-topojson").on("click", function(){
+  d3.json("samples/topo.json", function(error, json) {
     processData(json);
   })
 });

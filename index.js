@@ -1,5 +1,2 @@
-var topojson = require("topojson");
-
-window.tj = topojson;
-
-console.log(this, topojson);
+d3 = require("d3");
+topojson = require("topojson");
