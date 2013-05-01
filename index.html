@@ -95,7 +95,7 @@ h3 {
 <div class="topojsonSettings">
   <span class="bin">topojson</span>
   <span class="opts">--quantization <span class="value">1e4</span></span>
-  <span class="opts">--simplify <span class="value">1e5</span></span>
+  <span class="opts">--simplify <span class="value">0</span></span>
   <span class="action">Save</span>
 </div>
 <!--
@@ -134,7 +134,7 @@ var inputData,
 var argv = {
   q: 1e4,
   s: 0
-}
+};
 
 var mapContainer = d3.select(".map-container");
 
@@ -181,12 +181,25 @@ function processData(data) {
     // }
   } else {
     var options = {
-      // "verbose": true,
-      // "quantization": 1e5,
-      // "coordinate-system": "auto",
-      // "id": "id"
+      "coordinate-system": "auto", // will be assigned by topojson.topology
+      "quantization": argv.q
     };
-    topology = topojson.topology({anonymous: inputData}, options); // TODO replace anonymous with file name
+
+    // Convert and merge GeoJSON features into a TopoJSON topology.
+    // TODO replace anonymous with file name(s)
+    topology = topojson.topology({anonymous: inputData}, options);
+
+    // Simplify.
+    if (+argv.s > 0) topojson.simplify(topology, {
+      "coordinate-system": options["coordinate-system"],
+      "minimum-area": +argv.s
+    });
+
+    // Remove empty (or tiny) features.
+    topojson.filter(topology, {
+      "coordinate-system": options["coordinate-system"],
+      "minimum-area": +argv.s || 0
+    });
   }
   drawMap();
 }
