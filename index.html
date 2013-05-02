@@ -20,7 +20,7 @@ h3 {
   padding: 20px;
 }
 
-.sample-geojson {
+.sample {
   float: right;
   font-size: 12px;
 }
@@ -77,7 +77,7 @@ h3 {
   position: absolute;
   left: 10px;
   right: 10px;
-  top: 130px;
+  top: 141px;
   bottom: 10px;
 }
 
@@ -106,13 +106,15 @@ h3 {
 </style>
 
 <div class="head">
-  <span>TopoJSON Distillery</span><button class="sample-geojson">sample</button>
+  <span>TopoJSON Distillery</span>
+  <button class="sample states">states</button>
+  <button class="sample counties">counties</button>
+  <button class="sample world">world</button>
 </div>
 
 <div class="control-panel">
   <span class="action load">Load file</span>
   <div class="argv"></div>
-  <span class="action update">Update</span>
   <span class="action save">Save</span>
 </div>
 
@@ -132,7 +134,8 @@ var path = d3.geo.path()
     .projection(projection);
 
 var inputData,
-    topology;
+    topology,
+    feature;
 
 var argv = {
   quantization: 1e4,
@@ -157,7 +160,7 @@ var projectionSelect = mapControlsContainer.append("select")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
-      draw();
+      redraw();
     });
 
 var projections = projectionSelect.selectAll("option")
@@ -165,7 +168,7 @@ var projections = projectionSelect.selectAll("option")
   .enter().append("option")
     .text(function(d) { return d; })
 
-function processData(data) {
+function processData(data, resetZoom) {
   // caching the input data
   inputData = JSON.parse(JSON.stringify(data));
 
@@ -196,16 +199,15 @@ function processData(data) {
       "minimum-area": +argv.simplification || 0
     });
   }
-  draw();
+  var feature = topojson.feature(topology, topology.objects.anonymous); // TODO draw which feature?
+  resetZoom? setZoomTo(feature) : null;
+  draw(feature);
 }
 
-function draw() {
-  resize();
+function setZoomTo(feature) {
   projection
       .scale(1)
       .translate([0, 0]);
-
-  var feature = topojson.feature(topology, topology.objects.anonymous); // TODO draw which feature?
 
   var b = path.bounds(feature),
       s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
@@ -214,13 +216,20 @@ function draw() {
   projection
       .scale(s)
       .translate(t);
+}
 
-  var feature = svg.selectAll("path")
+function draw(newFeature) {
+  feature = newFeature;
+  redraw();
+}
+
+function redraw() {
+  var f = svg.selectAll("path")
       .data(feature.features); // TODO assumes feature is a FeatureCollection
 
-  feature.enter().append("path");
-  feature.exit().remove();
-  feature.attr("d", path);
+  f.enter().append("path");
+  f.exit().remove();
+  f.attr("d", path);
 }
 
 //
@@ -229,15 +238,13 @@ function draw() {
 
 // Update argv
 
-d3.select(".update").on("click", update)
-
 function update() {
-  processData(inputData);
+  processData(inputData, false);
 }
 
 // Window resize
 window.onresize = function() {
-  draw();
+  resize();
 };
 
 function resize() {
@@ -246,6 +253,8 @@ function resize() {
   height = bbox.height;
   svg.attr("width", width).attr("height", height);
 }
+
+resize();
 
 // Drag and drop
 var dropTarget = document;
@@ -276,22 +285,22 @@ function handleFiles(files) {
 
 function handleReaderLoad(evt) {
   var data = JSON.parse(evt.target.result);
-  processData(data);
+  processData(data, true);
 }
 
 //
 // Samples
 //
 
-d3.select(".sample-geojson").on("click", function(){
-  d3.json("samples/states.json", function(error, json) {
-    processData(json);
+d3.select(".sample.states").on("click", function(){
+  d3.json("samples/geojson/states.json", function(error, json) {
+    processData(json, true);
   })
 });
 
-d3.select(".sample-topojson").on("click", function(){
-  d3.json("samples/topo.json", function(error, json) {
-    processData(json);
+d3.select(".sample.counties").on("click", function(){
+  d3.json("samples/geojson/counties.json", function(error, json) {
+    processData(json, true);
   })
 });
 
