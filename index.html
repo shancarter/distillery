@@ -18,11 +18,14 @@ h3 {
   font-size: 18px;
   line-height: 18px;
   padding: 20px;
-  text-align: center;
+}
+
+.sample-geojson {
+  float: right;
+  font-size: 12px;
 }
 
 .topojsonSettings {
-  text-align: center;
   font-size: 14px;
   line-height: 14px;
   padding: 15px 20px;
@@ -47,10 +50,16 @@ h3 {
 .action {
   display: inline-block;
   padding: 8px 10px;
-  margin: 0 10px;
+  margin: 0 10px 0 0;
   background: #666;
   color: white;
   border-radius: 4px;
+  cursor: pointer;
+  border: solid 1px #333;
+}
+
+.action:hover {
+  border-color: red;
 }
 
 .value {
@@ -60,6 +69,10 @@ h3 {
   padding: 8px 10px;
   margin-left: 6px;
   color: #333;
+}
+
+.save {
+  float: right;
 }
 
 .map-container {
@@ -75,7 +88,13 @@ h3 {
   top: 10px;
   left: 10px;
   width: 200px;
+  padding: 10px;
   border: solid 1px #ddd;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.map-controls select {
+  width: 100%;
 }
 
 .map {
@@ -89,14 +108,13 @@ h3 {
 </style>
 
 <div class="head">
-  <span>The Distillery</span>
-  <button class="sample-geojson">sample geojson</button>
+  <span>TopoJSON Distillery</span><button class="sample-geojson">sample</button>
 </div>
 <div class="topojsonSettings">
-  <span class="bin">topojson</span>
+  <span class="action load">Load file</span>
   <span class="opts">--quantization <span class="value">1e4</span></span>
   <span class="opts">--simplify <span class="value">0</span></span>
-  <span class="action">Save</span>
+  <span class="action save">Save</span>
 </div>
 <!--
 -o, --out output TopoJSON file name
@@ -152,7 +170,7 @@ var projectionSelect = mapControlsContainer.append("select")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
-      drawMap();
+      draw();
     });
 
 var projections = projectionSelect.selectAll("option")
@@ -201,10 +219,10 @@ function processData(data) {
       "minimum-area": +argv.s || 0
     });
   }
-  drawMap();
+  draw();
 }
 
-function drawMap() {
+function draw() {
   resize();
   projection
       .scale(1)
@@ -229,7 +247,7 @@ function drawMap() {
 }
 
 window.onresize = function() {
-  resize();
+  draw();
 };
 
 // Drag and drop file
