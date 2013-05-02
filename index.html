@@ -25,7 +25,7 @@ h3 {
   font-size: 12px;
 }
 
-.topojsonSettings {
+.control-panel {
   font-size: 14px;
   line-height: 14px;
   padding: 15px 20px;
@@ -34,13 +34,11 @@ h3 {
   border-bottom: solid 1px #ddd;
 }
 
-.bin {
+.argv {
   display: inline-block;
-  padding: 8px;
-  font-weight: bold;
 }
 
-.opts {
+.option {
   display: inline-block;
   padding: 8px 10px 8px 0;
   margin-right: 10px;
@@ -86,8 +84,8 @@ h3 {
 .map-controls {
   position: absolute;
   top: 10px;
-  left: 10px;
-  width: 200px;
+  right: 10px;
+  width: 150px;
   padding: 10px;
   border: solid 1px #ddd;
   background: rgba(255, 255, 255, 0.9);
@@ -110,32 +108,19 @@ h3 {
 <div class="head">
   <span>TopoJSON Distillery</span><button class="sample-geojson">sample</button>
 </div>
-<div class="topojsonSettings">
+
+<div class="control-panel">
   <span class="action load">Load file</span>
-  <span class="opts">--quantization <span class="value">1e4</span></span>
-  <span class="opts">--simplify <span class="value">0</span></span>
+  <div class="argv"></div>
+  <span class="action update">Update</span>
   <span class="action save">Save</span>
 </div>
-<!--
--o, --out output TopoJSON file name
--q, --quantization maximum number of differentiable points along either dimension
--s, --simplify precision threshold for Visvalingam simplification, in steradians
---simplify-proportion proportion of points to retain for Visvalingam simplification
---cartesian assume Cartesian coordinates
---spherical assume spherical coordinates
---force-clockwise force clockwise exterior rings and counterclockwise interior rings
---id-property name of feature property to promote to geometry id
--p, --properties feature properties to preserve; no name preserves all properties
--e, --external-properties CSV or TSV file to join properties (by id) to output features
---shapefile-encoding character encoding for reading shapefile properties
--x, --longitude name of the longitude property for CSV or TSV geometry input
--y, --latitude name of the latitude property for CSV or TSV geometry input
- -->
 
 <div class="map-container"></div>
 </div>
 
 <script src="lib.js"></script>
+<script src="javascripts/control-panel.js"></script>
 <script>
 
 var width = 500,
@@ -150,9 +135,11 @@ var inputData,
     topology;
 
 var argv = {
-  q: 1e4,
-  s: 0
+  quantization: 1e4,
+  simplification: 1e-5
 };
+
+controlPanel(d3.select(".argv"), argv, update);
 
 var mapContainer = d3.select(".map-container");
 
@@ -178,21 +165,11 @@ var projections = projectionSelect.selectAll("option")
   .enter().append("option")
     .text(function(d) { return d; })
 
-
-function resize() {
-  var bbox = mapContainer.node().getBoundingClientRect();
-  width = bbox.width;
-  height = bbox.height;
-  svg.attr("width", width).attr("height", height);
-}
-
 function processData(data) {
-  inputData = data;
+  // caching the input data
+  inputData = JSON.parse(JSON.stringify(data));
 
-  if (data.type === "Topology") {
-
-    // Convert GeoJSON to TopoJSON.
-    // var object = topojson.topology(objects, options);
+  if (inputData.type === "Topology") {
 
     // for (obj in inputData.objects) {
     //   geoObjects.push(topojson.feature(inputData, inputData.objects[obj]));
@@ -200,23 +177,23 @@ function processData(data) {
   } else {
     var options = {
       "coordinate-system": "auto", // will be assigned by topojson.topology
-      "quantization": argv.q
+      "quantization": argv.quantization
     };
 
     // Convert and merge GeoJSON features into a TopoJSON topology.
     // TODO replace anonymous with file name(s)
-    topology = topojson.topology({anonymous: inputData}, options);
+    topology = topojson.topology({anonymous: data}, options);
 
     // Simplify.
-    if (+argv.s > 0) topojson.simplify(topology, {
+    if (+argv.simplification > 0) topojson.simplify(topology, {
       "coordinate-system": options["coordinate-system"],
-      "minimum-area": +argv.s
+      "minimum-area": +argv.simplification
     });
 
     // Remove empty (or tiny) features.
     topojson.filter(topology, {
       "coordinate-system": options["coordinate-system"],
-      "minimum-area": +argv.s || 0
+      "minimum-area": +argv.simplification || 0
     });
   }
   draw();
@@ -246,11 +223,31 @@ function draw() {
   feature.attr("d", path);
 }
 
+//
+// Events
+//
+
+// Update argv
+
+d3.select(".update").on("click", update)
+
+function update() {
+  processData(inputData);
+}
+
+// Window resize
 window.onresize = function() {
   draw();
 };
 
-// Drag and drop file
+function resize() {
+  var bbox = mapContainer.node().getBoundingClientRect();
+  width = bbox.width;
+  height = bbox.height;
+  svg.attr("width", width).attr("height", height);
+}
+
+// Drag and drop
 var dropTarget = document;
 
 dropTarget.addEventListener("dragenter", dropKill, false);
