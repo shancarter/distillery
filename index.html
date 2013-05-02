@@ -34,6 +34,29 @@ h3 {
   border-bottom: solid 1px #ddd;
 }
 
+.files {
+  display: inline-block;
+  height: 30px;
+  width: 300px;
+  padding: 10px;
+  margin: 0 20px;
+  border: solid 1px #aaa;
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.file {
+  display: inline-block;
+  padding: 8px 10px;
+  margin-right: 10px;
+  border: solid 1px #ccc;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  border: solid 1px #333;
+  color: white;
+}
+
 .argv {
   display: inline-block;
 }
@@ -113,7 +136,11 @@ h3 {
 </div>
 
 <div class="control-panel">
-  <span class="action load">Load file</span>
+  <span>GeoJSON Input:</span>
+  <div class="files">
+    <span class="action load">+</span>
+  </div>
+  <span>Simplification: </span>
   <div class="argv"></div>
   <span class="action save">Save</span>
 </div>
@@ -151,7 +178,7 @@ var simplificationSlider = d3.select(".control-panel .argv")
     .attr("max", 1e-4)
     .attr("step", 1e-7)
     .attr("value", argv.simplification)
-    .style("width", "600px")
+    .style("width", "400px")
     .on("change", function() {
       argv.simplification = +this.value; // Math.pow(10, -this.value);
       update();
@@ -226,6 +253,12 @@ function addJSON(j, filename) {
     file.content = JSON.stringify(j);
   }
   files.push(file);
+  d3.select(".files").selectAll(".file")
+      .data(files)
+    .enter().insert("div", ".action")
+      .attr("class", "file")
+      .text(function(d){ return d.name; });
+
   processFiles();
   resetZoom();
   draw();
