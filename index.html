@@ -144,7 +144,18 @@ var argv = {
   simplification: 1e-5
 };
 
-controlPanel(d3.select(".argv"), argv, update);
+var simplificationSlider = d3.select(".control-panel .argv")
+  .append("input")
+    .attr("type", "range")
+    .attr("min", 1e-7)
+    .attr("max", 1e-4)
+    .attr("step", 1e-7)
+    .attr("value", argv.simplification)
+    .style("width", "600px")
+    .on("change", function() {
+      argv.simplification = +this.value; // Math.pow(10, -this.value);
+      update();
+    })
 
 var mapContainer = d3.select(".map-container");
 
@@ -162,6 +173,7 @@ var projectionSelect = mapControlsContainer.append("select")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
+      resetZoom();
       draw();
     });
 
@@ -225,32 +237,32 @@ function removeFile(i) {
 }
 
 function resetZoom() {
-  var feature = files[files.length - 1].feature;
-  projection
-      .scale(1)
-      .translate([0, 0]);
+  if (files.length) {
+    var feature = files[files.length - 1].feature;
+    projection
+        .scale(1)
+        .translate([0, 0]);
 
-  var b = path.bounds(feature),
-      s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-      t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+    var b = path.bounds(feature),
+        s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+        t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
-  projection
-      .scale(s)
-      .translate(t);
+    projection
+        .scale(s)
+        .translate(t);
+  };
+
 }
 
 function draw() {
   files.forEach(function(f) {
     var feature = svg.selectAll("path")
         .data(f.feature.features); // TODO assumes feature is a FeatureCollection
-
     feature.enter().append("path");
     feature.exit().remove();
     feature.attr("d", path);
-
   })
 }
-
 
 //
 // Events
@@ -276,6 +288,8 @@ function resize() {
   svg.attr("width", width).attr("height", height);
   resetZoom();
 }
+
+resize();
 
 
 // Drag and drop
