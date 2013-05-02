@@ -134,6 +134,8 @@ var path = d3.geo.path()
     .projection(projection);
 
 var inputData,
+    files = [],
+    parsedFiles = [],
     topology,
     feature;
 
@@ -160,7 +162,7 @@ var projectionSelect = mapControlsContainer.append("select")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
-      redraw();
+      draw();
     });
 
 var projections = projectionSelect.selectAll("option")
@@ -168,43 +170,62 @@ var projections = projectionSelect.selectAll("option")
   .enter().append("option")
     .text(function(d) { return d; })
 
-function processData(data, resetZoom) {
-  // caching the input data
-  inputData = JSON.parse(JSON.stringify(data));
+function processFiles() {
+  files.forEach(function(f) {
 
-  if (inputData.type === "Topology") {
+    // Bring back original geojson
+    f.json = JSON.parse(f.content);
 
-    // for (obj in inputData.objects) {
-    //   geoObjects.push(topojson.feature(inputData, inputData.objects[obj]));
-    // }
-  } else {
     var options = {
       "coordinate-system": "auto", // will be assigned by topojson.topology
       "quantization": argv.quantization
     };
 
     // Convert and merge GeoJSON features into a TopoJSON topology.
-    // TODO replace anonymous with file name(s)
-    topology = topojson.topology({anonymous: data}, options);
+    var o = {}
+    o[f.name] =  f.json;
+    f.topology = topojson.topology(o, options);
 
     // Simplify.
-    if (+argv.simplification > 0) topojson.simplify(topology, {
+    if (+argv.simplification > 0) topojson.simplify(f.topology, {
       "coordinate-system": options["coordinate-system"],
       "minimum-area": +argv.simplification
     });
 
     // Remove empty (or tiny) features.
-    topojson.filter(topology, {
+    topojson.filter(f.topology, {
       "coordinate-system": options["coordinate-system"],
       "minimum-area": +argv.simplification || 0
     });
-  }
-  var feature = topojson.feature(topology, topology.objects.anonymous); // TODO draw which feature?
-  resetZoom? setZoomTo(feature) : null;
-  draw(feature);
+
+    f.feature = topojson.feature(f.topology, f.topology.objects[f.name]);
+  });
 }
 
-function setZoomTo(feature) {
+function addJSON(j, filename) {
+  var file = {
+    name: filename
+  };
+  if (j.type === "Topology") {
+    // Is TopoJSON
+    // TODO convert to geojson and cache that result as a string into file.content
+  } else {
+    file.json = j;
+    file.content = JSON.stringify(j);
+  }
+  files.push(file);
+  processFiles();
+  resetZoom();
+  draw();
+
+}
+
+function removeFile(i) {
+  // TODO remove file by index
+}
+
+function resetZoom() {
+  var feature = files[files.length - 1].feature;
   projection
       .scale(1)
       .translate([0, 0]);
@@ -218,19 +239,18 @@ function setZoomTo(feature) {
       .translate(t);
 }
 
-function draw(newFeature) {
-  feature = newFeature;
-  redraw();
+function draw() {
+  files.forEach(function(f) {
+    var feature = svg.selectAll("path")
+        .data(f.feature.features); // TODO assumes feature is a FeatureCollection
+
+    feature.enter().append("path");
+    feature.exit().remove();
+    feature.attr("d", path);
+
+  })
 }
 
-function redraw() {
-  var f = svg.selectAll("path")
-      .data(feature.features); // TODO assumes feature is a FeatureCollection
-
-  f.enter().append("path");
-  f.exit().remove();
-  f.attr("d", path);
-}
 
 //
 // Events
@@ -239,12 +259,14 @@ function redraw() {
 // Update argv
 
 function update() {
-  processData(inputData, false);
+  processFiles();
+  draw();
 }
 
 // Window resize
 window.onresize = function() {
   resize();
+  draw();
 };
 
 function resize() {
@@ -252,9 +274,9 @@ function resize() {
   width = bbox.width;
   height = bbox.height;
   svg.attr("width", width).attr("height", height);
+  resetZoom();
 }
 
-resize();
 
 // Drag and drop
 var dropTarget = document;
@@ -284,8 +306,7 @@ function handleFiles(files) {
 }
 
 function handleReaderLoad(evt) {
-  var data = JSON.parse(evt.target.result);
-  processData(data, true);
+  addFile(evt.target.result, "anonymous");
 }
 
 //
@@ -294,13 +315,13 @@ function handleReaderLoad(evt) {
 
 d3.select(".sample.states").on("click", function(){
   d3.json("samples/geojson/states.json", function(error, json) {
-    processData(json, true);
+    addJSON(json, "states");
   })
 });
 
 d3.select(".sample.counties").on("click", function(){
   d3.json("samples/geojson/counties.json", function(error, json) {
-    processData(json, true);
+    addJSON(json, "counties");
   })
 });
 
