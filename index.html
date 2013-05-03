@@ -20,6 +20,12 @@ h3 {
   padding: 20px 40px;
 }
 
+.description {
+  font-size: 12px;
+  color: #999;
+  margin-left: 10px;
+}
+
 .sample {
   float: right;
   font-size: 12px;
@@ -144,24 +150,26 @@ h3 {
 
 .map {
   background: hsl(210, 50%, 70%);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 0%, hsl(210, 50%, 63%) 100%);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .map-background {
-  stroke: hsl(210, 60%, 85%);
+  stroke: rgba(255, 255, 255, 0.4);
   stroke-width: 1px;
-  fill: hsl(210, 50%, 70%);
+  fill: none;
 }
 
 .map path {
-  fill: hsl(210, 50%, 72%);
-  stroke: hsl(210, 80%, 95%);
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: hsl(210, 80%, 90%);
 }
 
 </style>
 
 <div class="head">
-  <span>TopoJSON Distillery</span>
+  <span>The Distillery</span>
+  <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
   <button class="sample states">states</button>
   <button class="sample counties">counties</button>
   <button class="sample world">world</button>
