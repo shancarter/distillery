@@ -150,7 +150,7 @@ h3 {
 
 .map {
   background: hsl(210, 50%, 70%);
-  background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 0%, hsl(210, 50%, 63%) 100%);
+  background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 20%, hsl(210, 50%, 63%) 100%);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -165,6 +165,10 @@ h3 {
   stroke: hsl(210, 80%, 90%);
 }
 
+.map path:hover {
+  fill: rgba(255, 255, 255, 0.18);
+}
+
 </style>
 
 <div class="head">
@@ -177,13 +181,13 @@ h3 {
 
 <div class="control-panel">
   <div class="files">
-    <span class="note">Add GeoJSON files</span>
     <span class="action load">+</span>
+    <span class="note">Add GeoJSON file(s)</span>
     <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
   </div>
   <span>Simplification: </span>
   <div class="argv"></div>
-  <span class="action save">Save</span>
+  <span class="action save">Download TopoJSON</span>
 </div>
 
 <div class="map-container"></div>
@@ -216,7 +220,7 @@ var argv = {
 var simplificationSlider = d3.select(".control-panel .argv")
   .append("input")
     .attr("type", "range")
-    .attr("min", 100)
+    .attr("min", 50)
     .attr("max", 1000)
     .attr("step", 1)
     .attr("value", argv["simplify-proportion"] * 1000)
@@ -257,24 +261,7 @@ var projections = projectionSelect.selectAll("option")
     .text(function(d) { return d; })
 
 function processFiles() {
-  var fileContainer = d3.select(".files").selectAll(".file")
-      .data(files);
 
-  var newFile = fileContainer.enter().insert("div", ".action")
-      .attr("class", "file");
-
-  newFile.append("span")
-      .text(function(d){ return d.name; });
-
-  newFile.append("span").attr("class", "close")
-      .on("click", function(d, i) {
-        removeFile(i);
-      });
-
-  fileContainer.exit().remove();
-
-
-  d3.select(".files .note").style("display", files.length ? "none" : null );
   files.forEach(function(f) {
 
     // Bring back original geojson
@@ -307,6 +294,11 @@ function processFiles() {
 }
 
 function addJSON(j, filename) {
+  files.forEach(function(f, i) {
+    if (f.name === filename) {
+      throw "File name already exists"
+    };
+  })
   var file = {
     name: filename
   };
@@ -326,11 +318,14 @@ function addJSON(j, filename) {
 
 
 
-function removeFile(i) {
-  files.splice(i, 1);
+function removeFile(name) {
+  var index;
+  files.forEach(function(f, i) {
+    if (f.name === name) { index = i; };
+  });
+  files.splice(index, 1);
   processFiles();
   draw();
-  // TODO remove file by index
 }
 
 function resetZoom() {
@@ -352,8 +347,28 @@ function resetZoom() {
 }
 
 function draw() {
+  var fileContainer = d3.select(".files").selectAll(".file")
+      .data(files, function(d) { return d.name; });
+
+  var newFile = fileContainer.enter().insert("div", ".action")
+      .attr("class", "file");
+
+  newFile.append("span")
+      .text(function(d){ return d.name; });
+
+  newFile.append("span").attr("class", "close")
+      .on("click", function(d) {
+        removeFile(d.name);
+      });
+
+  fileContainer.exit().remove();
+
+
+  d3.select(".files .note").style("display", files.length ? "none" : null );
+
+
   var f = map.selectAll(".file")
-      .data(files);
+      .data(files, function(d) { return d.name; });
 
   f.enter().append("g").attr("class", "file");
   f.exit().remove();
