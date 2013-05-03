@@ -14,12 +14,25 @@ h3 {
   padding: 0;
 }
 
-.head {
-  font-size: 18px;
-  line-height: 18px;
-  padding: 20px 40px;
-  display: inline-block;
+.header {
+  padding: 15px 20px;
+  font-size: 14px;
+  line-height: 14px;
+  background: #f0f0f0;
+  border-top: solid 1px #ddd;
+  border-bottom: solid 1px #ddd;
+  width: 100%;
+}
 
+.header td {
+  padding: 0 10px;
+}
+
+.branding {
+  font-size: 20px;
+  line-height: 18px;
+  width: 150px;
+  border-right: solid 1px #ddd;
 }
 
 .description {
@@ -27,28 +40,13 @@ h3 {
   color: #999;
 }
 
-.sample {
-  font-size: 12px;
-}
-
-.control-panel {
-  font-size: 14px;
-  line-height: 14px;
-  padding: 15px 20px;
-  background: #f0f0f0;
-  border-top: solid 1px #ddd;
-  border-bottom: solid 1px #ddd;
-}
-
 .note {
   color: #999;
 }
 
 .files {
-  display: inline-block;
   height: 30px;
   padding: 10px;
-  margin: 0 20px;
   border: solid 1px #aaa;
   background: rgba(0, 0, 0, 0.1);
   box-shadow: inset 0px 1px 6px rgba(0, 0, 0, 0.2);
@@ -64,6 +62,7 @@ h3 {
   border-radius: 3px;
   border: solid 1px #333;
   color: white;
+  white-space: nowrap;
   position: relative;
 }
 
@@ -82,8 +81,10 @@ h3 {
 }
 
 .simplify {
-  display: inline-block;
-  width: 500px;
+}
+
+.output {
+  width: 200px;
 }
 
 .action.load {
@@ -117,7 +118,6 @@ h3 {
 }
 
 .action.download {
-  float: right;
   height: 30px;
   line-height: 30px;
   padding: 10px 20px;
@@ -128,23 +128,24 @@ h3 {
   box-shadow: 0 2px 3px rgba(0,0,0,0.2);
   text-decoration: none;
   color: rgba(0,0,0,0.3);
+  white-space: nowrap;
 }
 
 .map-container {
   position: absolute;
   right: 40px;
-  left: 220px;
-  top: 162px;
+  left: 210px;
+  top: 110px;
   bottom: 20px;
 }
 
 .map-controls {
   position: absolute;
-  top: 152px;
+  top: 110px;
   left: 10px;
-  bottom: 10px;
-  width: 150px;
-  padding: 10px;
+  bottom: 20px;
+  width: 170px;
+  padding-right: 10px;
   border-right: solid 1px #ddd;
   background: rgba(255, 255, 255, 0.9);
 }
@@ -177,22 +178,28 @@ h3 {
 
 </style>
 
-<div class="control-panel">
-  <div class="head">
-    <span>The Distillery</span><br>
-    <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
-  </div>
-  <div class="files">
-    <span class="action load">+</span>
-    <span class="note">Add GeoJSON file(s)</span>
-    <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
-  </div>
-  <div class="simplify">
-    <span>Simplification</span>
-    <span><span class="value"></span>% of points retained</span>
-  </div>
-  <a class="action download">Download TopoJSON</a>
-</div>
+<table class="header">
+  <tr>
+    <td class="branding">
+      <span>The Distillery</span><br>
+      <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
+    </td>
+    <td class="input">
+      <div class="files">
+        <span class="action load">+</span>
+        <span class="note">Add GeoJSON file(s)</span>
+        <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
+      </div>
+    </td>
+    <td class="simplify">
+      <span>Simplification</span>
+      <span><span class="value"></span>% of points removed</span>
+    </td>
+    <td class="output">
+      <a class="action download">Download TopoJSON</a>
+    </td>
+  </tr>
+</table>
 
 <div class="map-container"></div>
 <div class="map-controls">
@@ -250,10 +257,10 @@ var simplificationSlider = d3.select(".simplify")
     .attr("min", 10)
     .attr("max", 1000)
     .attr("step", 1)
-    .attr("value", argv["simplify-proportion"] * 1000)
+    .attr("value", (1 - argv["simplify-proportion"]) * 1000)
     .style("width", "100%")
     .on("change", function() {
-      argv["simplify-proportion"] = +this.value / 1000;
+      argv["simplify-proportion"] = 1 - this.value / 1000;
       d3.select(".simplify .value").text(this.value / 10)
       update();
     });
