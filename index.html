@@ -27,7 +27,6 @@ h3 {
 }
 
 .sample {
-  float: right;
   font-size: 12px;
 }
 
@@ -82,6 +81,11 @@ h3 {
   cursor: pointer;
 }
 
+.simplify {
+  display: inline-block;
+  width: 500px;
+}
+
 .action.load {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   background: rgba(255, 255, 255, 0.3);
@@ -112,17 +116,18 @@ h3 {
   border: solid 1px #333;
 }
 
-.value {
-  border: solid 1px #dedede;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 8px 10px;
-  margin-left: 6px;
-  color: #333;
-}
-
 .action.download {
   float: right;
+  height: 30px;
+  line-height: 30px;
+  padding: 10px 20px;
+  border: solid 2px #CCC;
+  border-top: solid 1px white;
+  border-bottom: solid 1px rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.08);
+  box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+  text-decoration: none;
+  color: rgba(0,0,0,0.3);
 }
 
 .map-container {
@@ -185,9 +190,11 @@ h3 {
     <span class="note">Add GeoJSON file(s)</span>
     <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
   </div>
-  <span>Simplification: </span>
-  <div class="argv"></div>
-  <span class="action download">Download TopoJSON</span>
+  <div class="simplify">
+    <span>Simplification</span>
+    <span><span class="value"></span>% of points retained</span>
+  </div>
+  <a class="action download">Download TopoJSON</a>
 </div>
 
 <div class="map-container"></div>
@@ -202,6 +209,8 @@ window.URL = (window.URL || window.webkitURL);
 
 var width = 500,
     height = 500;
+
+var format = d3.format("1f")
 
 var projection = d3.geo.mercator();
 
@@ -234,16 +243,17 @@ var map = svg.append("g")
 var mapBackground = map.append("rect")
     .attr("class", "map-background");
 
-var simplificationSlider = d3.select(".control-panel .argv")
+var simplificationSlider = d3.select(".simplify")
   .append("input")
     .attr("type", "range")
-    .attr("min", 50)
+    .attr("min", 10)
     .attr("max", 1000)
     .attr("step", 1)
     .attr("value", argv["simplify-proportion"] * 1000)
-    .style("width", "400px")
+    .style("width", "100%")
     .on("change", function() {
-      argv["simplify-proportion"] = +this.value / 1000; // Math.pow(10, -this.value);
+      argv["simplify-proportion"] = +this.value / 1000;
+      d3.select(".simplify .value").text(this.value / 10)
       update();
     });
 
@@ -265,22 +275,19 @@ var projections = projectionSelect.selectAll("option")
 
 var downloadButton = d3.select(".action.download")
 
-downloadButton.on("click", function() {
-  var url = window.URL.createObjectURL(new Blob(source.source, { "type" : "text\/json" }));
-
-      var a = d3.select("body")
-          .append('a')
-          .attr("class", "svg-crowbar")
-          .attr("download", filename + ".svg")
-          .attr("href", url)
-          .style("display", "none");
-
-      a.node().click();
-
-      setTimeout(function() {
-        window.URL.revokeObjectURL(url);
-      }, 10);
-})
+downloadButton.on("mouseover", function() {
+  if (files.length) {
+    var url = window.URL.createObjectURL(new Blob([JSON.stringify(topology)], { "type" : "application\/json" }));
+    downloadButton
+        .attr("download", files.map(function(f) { return f.name; }).join("-") + ".json")
+        .attr("href", url)
+        .on("mouseout", function(){
+          setTimeout(function() {
+            window.URL.revokeObjectURL(url);
+          }, 10);
+        });
+  }
+});
 
 
 
