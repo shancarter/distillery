@@ -52,18 +52,33 @@ h3 {
 
 .file {
   display: inline-block;
-  padding: 8px 10px;
+  padding: 8px 30px 8px 10px;
   margin-right: 10px;
   border: solid 1px #ccc;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 3px;
   border: solid 1px #333;
   color: white;
+  position: relative;
+}
+
+.file .close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-block;
+  border: solid 1px #ccc;
+  padding: 4px;
+  background: rgba(255, 0, 0, 0.5);
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
 .action.load {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
   border: solid 1px rgba(0, 0, 0, 0.1);
   border-top: solid 1px rgba(255, 255, 255, 0.5);
   border-bottom: solid 1px rgba(0, 0, 0, 0.3);
@@ -147,6 +162,7 @@ h3 {
   <div class="files">
     <span class="note">Add GeoJSON files</span>
     <span class="action load">+</span>
+    <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
   </div>
   <span>Simplification: </span>
   <div class="argv"></div>
@@ -176,19 +192,19 @@ var inputData,
 
 var argv = {
   quantization: 1e4,
-  simplification: 1e-5
+  "simplify-proportion": 1
 };
 
 var simplificationSlider = d3.select(".control-panel .argv")
   .append("input")
     .attr("type", "range")
-    .attr("min", 1e-7)
-    .attr("max", 1e-4)
-    .attr("step", 1e-7)
-    .attr("value", argv.simplification)
+    .attr("min", 100)
+    .attr("max", 1000)
+    .attr("step", 1)
+    .attr("value", argv["simplify-proportion"] * 1000)
     .style("width", "400px")
     .on("change", function() {
-      argv.simplification = +this.value; // Math.pow(10, -this.value);
+      argv["simplify-proportion"] = +this.value / 1000; // Math.pow(10, -this.value);
       update();
     })
 
@@ -218,6 +234,24 @@ var projections = projectionSelect.selectAll("option")
     .text(function(d) { return d; })
 
 function processFiles() {
+  var fileContainer = d3.select(".files").selectAll(".file")
+      .data(files);
+
+  var newFile = fileContainer.enter().insert("div", ".action")
+      .attr("class", "file");
+
+  newFile.append("span")
+      .text(function(d){ return d.name; });
+
+  newFile.append("span").attr("class", "close")
+      .on("click", function(d, i) {
+        removeFile(i);
+      });
+
+  fileContainer.exit().remove();
+
+
+  d3.select(".files .note").style("display", files.length ? "none" : null );
   files.forEach(function(f) {
 
     // Bring back original geojson
@@ -234,15 +268,15 @@ function processFiles() {
     f.topology = topojson.topology(o, options);
 
     // Simplify.
-    if (+argv.simplification > 0) topojson.simplify(f.topology, {
+    if (+argv["simplify-proportion"] > 0) topojson.simplify(f.topology, {
       "coordinate-system": options["coordinate-system"],
-      "minimum-area": +argv.simplification
+      "retain-proportion": +argv["simplify-proportion"]
     });
 
     // Remove empty (or tiny) features.
     topojson.filter(f.topology, {
       "coordinate-system": options["coordinate-system"],
-      "minimum-area": +argv.simplification || 0
+      "minimum-area": 0
     });
 
     f.feature = topojson.feature(f.topology, f.topology.objects[f.name]);
@@ -261,20 +295,18 @@ function addJSON(j, filename) {
     file.content = JSON.stringify(j);
   }
   files.push(file);
-  d3.select(".files").selectAll(".file")
-      .data(files)
-    .enter().insert("div", ".action")
-      .attr("class", "file")
-      .text(function(d){ return d.name; });
-
-  d3.select(".files .note").style("display", files.length ? "none" : null )
   processFiles();
   resetZoom();
   draw();
 
 }
 
+
+
 function removeFile(i) {
+  files.splice(i, 1);
+  processFiles();
+  draw();
   // TODO remove file by index
 }
 
@@ -297,10 +329,20 @@ function resetZoom() {
 }
 
 function draw() {
-  files.forEach(function(f) {
-    var feature = svg.selectAll("path")
-        .data(f.feature.features); // TODO assumes feature is a FeatureCollection
-    feature.enter().append("path");
+  var f = svg.selectAll(".file")
+      .data(files);
+
+  f.enter().append("g").attr("class", "file");
+  f.exit().remove();
+
+  f.each(function(d) {
+    var g = d3.select(this);
+    var feature = g.selectAll("path")
+        .data(function(d) { return d.feature.features }); // TODO assumes feature is a FeatureCollection
+    feature.enter()
+      .append("path")
+      .append("title")
+        .text(function(d) { return d.id; });
     feature.exit().remove();
     feature.attr("d", path);
   })
@@ -333,6 +375,18 @@ function resize() {
 
 resize();
 
+//
+// File Inputs
+//
+
+// File chooser
+var fileInput = d3.select(".file-input").on("change", function(evt) {
+  handleFiles(this.files)
+});
+
+d3.select(".action.load").on("click", function() {
+  fileInput.node().click();
+})
 
 // Drag and drop
 var dropTarget = document;
@@ -355,7 +409,6 @@ function drop(evt) {
 }
 
 function handleFiles(files) {
-
   Array.prototype.slice.call(files).forEach(function(file) {
     var fileName = file.name.split(".")[0],
         reader = new FileReader();
@@ -380,6 +433,12 @@ d3.select(".sample.states").on("click", function(){
 d3.select(".sample.counties").on("click", function(){
   d3.json("samples/geojson/counties.json", function(error, json) {
     addJSON(json, "counties");
+  })
+});
+
+d3.select(".sample.world").on("click", function(){
+  d3.json("samples/geojson/world.json", function(error, json) {
+    addJSON(json, "world");
   })
 });
 
