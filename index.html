@@ -18,12 +18,13 @@ h3 {
   font-size: 18px;
   line-height: 18px;
   padding: 20px 40px;
+  display: inline-block;
+
 }
 
 .description {
   font-size: 12px;
   color: #999;
-  margin-left: 10px;
 }
 
 .sample {
@@ -41,7 +42,6 @@ h3 {
 
 .note {
   color: #999;
-  margin-right: 10px;
 }
 
 .files {
@@ -132,8 +132,8 @@ h3 {
 
 .map-container {
   position: absolute;
-  left: 40px;
-  right: 220px;
+  right: 40px;
+  left: 220px;
   top: 162px;
   bottom: 20px;
 }
@@ -141,11 +141,11 @@ h3 {
 .map-controls {
   position: absolute;
   top: 152px;
-  right: 10px;
+  left: 10px;
   bottom: 10px;
   width: 150px;
   padding: 10px;
-  border-left: solid 1px #ddd;
+  border-right: solid 1px #ddd;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -156,35 +156,32 @@ h3 {
 .map {
   background: hsl(210, 50%, 70%);
   background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 20%, hsl(210, 50%, 63%) 100%);
+  background-image: -webkit-radial-gradient(center 0, 100% 100%, rgb(255, 251, 242) 20%, rgb(247, 241, 223) 100%);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .map-background {
-  stroke: rgba(255, 255, 255, 0.4);
+  stroke: rgba(0, 0, 0, 0.2);
   stroke-width: 1px;
   fill: none;
 }
 
 .map path {
-  fill: rgba(255, 255, 255, 0.08);
-  stroke: hsl(210, 80%, 90%);
+  fill: rgba(0, 0, 0, 0.08);
+  stroke: rgba(0, 0, 0, 0.2);
 }
 
 .map path:hover {
-  fill: rgba(255, 255, 255, 0.18);
+  fill: rgba(0, 0, 0, 0.14);
 }
 
 </style>
 
-<div class="head">
-  <span>The Distillery</span>
-  <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
-  <button class="sample states">states</button>
-  <button class="sample counties">counties</button>
-  <button class="sample world">world</button>
-</div>
-
 <div class="control-panel">
+  <div class="head">
+    <span>The Distillery</span><br>
+    <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
+  </div>
   <div class="files">
     <span class="action load">+</span>
     <span class="note">Add GeoJSON file(s)</span>
@@ -198,7 +195,11 @@ h3 {
 </div>
 
 <div class="map-container"></div>
-<div class="map-controls"></div>
+<div class="map-controls">
+  <button class="sample states">states</button>
+  <button class="sample counties">counties</button>
+  <button class="sample world">world</button>
+</div>
 </div>
 
 <script src="lib.js"></script>
