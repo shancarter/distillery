@@ -17,7 +17,7 @@ h3 {
 .head {
   font-size: 18px;
   line-height: 18px;
-  padding: 20px;
+  padding: 20px 40px;
 }
 
 .sample {
@@ -121,19 +121,20 @@ h3 {
 
 .map-container {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 141px;
-  bottom: 10px;
+  left: 40px;
+  right: 220px;
+  top: 162px;
+  bottom: 20px;
 }
 
 .map-controls {
   position: absolute;
-  top: 10px;
+  top: 152px;
   right: 10px;
+  bottom: 10px;
   width: 150px;
   padding: 10px;
-  border: solid 1px #ddd;
+  border-left: solid 1px #ddd;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -142,11 +143,19 @@ h3 {
 }
 
 .map {
+  background: hsl(210, 50%, 70%);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.map-background {
+  stroke: hsl(210, 60%, 85%);
+  stroke-width: 1px;
+  fill: hsl(210, 50%, 70%);
 }
 
 .map path {
-  fill: rgba(255, 200, 200, 0.4);
-  stroke: red;
+  fill: hsl(210, 50%, 72%);
+  stroke: hsl(210, 80%, 95%);
 }
 
 </style>
@@ -170,6 +179,7 @@ h3 {
 </div>
 
 <div class="map-container"></div>
+<div class="map-controls"></div>
 </div>
 
 <script src="lib.js"></script>
@@ -210,17 +220,22 @@ var simplificationSlider = d3.select(".control-panel .argv")
 
 var mapContainer = d3.select(".map-container");
 
-var mapControlsContainer = mapContainer.append("div")
-    .attr("class", "map-controls");
+var mapControls = d3.select(".map-controls");
 
 var svg = mapContainer.append("svg")
     .attr("class", "map")
     .attr("width", width)
     .attr("height", height);
 
+var map = svg.append("g")
+    .attr("transform", "translate(20, 20)");
+
+var mapBackground = map.append("rect")
+    .attr("class", "map-background")
+
 var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal"];
 
-var projectionSelect = mapControlsContainer.append("select")
+var projectionSelect = mapControls.append("select")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
@@ -329,7 +344,7 @@ function resetZoom() {
 }
 
 function draw() {
-  var f = svg.selectAll(".file")
+  var f = map.selectAll(".file")
       .data(files);
 
   f.enter().append("g").attr("class", "file");
@@ -367,9 +382,10 @@ window.onresize = function() {
 
 function resize() {
   var bbox = mapContainer.node().getBoundingClientRect();
-  width = bbox.width;
-  height = bbox.height;
-  svg.attr("width", width).attr("height", height);
+  width = bbox.width - 40;
+  height = bbox.height - 40;
+  svg.attr("width", bbox.width).attr("height", bbox.height);
+  mapBackground.attr("width", width).attr("height", height);
   resetZoom();
 }
 
