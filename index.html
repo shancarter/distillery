@@ -121,7 +121,7 @@ h3 {
   color: #333;
 }
 
-.save {
+.action.download {
   float: right;
 }
 
@@ -187,7 +187,7 @@ h3 {
   </div>
   <span>Simplification: </span>
   <div class="argv"></div>
-  <span class="action save">Download TopoJSON</span>
+  <span class="action download">Download TopoJSON</span>
 </div>
 
 <div class="map-container"></div>
@@ -197,6 +197,8 @@ h3 {
 <script src="lib.js"></script>
 <script src="javascripts/control-panel.js"></script>
 <script>
+
+window.URL = (window.URL || window.webkitURL);
 
 var width = 500,
     height = 500;
@@ -217,19 +219,6 @@ var argv = {
   "simplify-proportion": 1
 };
 
-var simplificationSlider = d3.select(".control-panel .argv")
-  .append("input")
-    .attr("type", "range")
-    .attr("min", 50)
-    .attr("max", 1000)
-    .attr("step", 1)
-    .attr("value", argv["simplify-proportion"] * 1000)
-    .style("width", "400px")
-    .on("change", function() {
-      argv["simplify-proportion"] = +this.value / 1000; // Math.pow(10, -this.value);
-      update();
-    })
-
 var mapContainer = d3.select(".map-container");
 
 var mapControls = d3.select(".map-controls");
@@ -243,8 +232,22 @@ var map = svg.append("g")
     .attr("transform", "translate(20, 20)");
 
 var mapBackground = map.append("rect")
-    .attr("class", "map-background")
+    .attr("class", "map-background");
 
+var simplificationSlider = d3.select(".control-panel .argv")
+  .append("input")
+    .attr("type", "range")
+    .attr("min", 50)
+    .attr("max", 1000)
+    .attr("step", 1)
+    .attr("value", argv["simplify-proportion"] * 1000)
+    .style("width", "400px")
+    .on("change", function() {
+      argv["simplify-proportion"] = +this.value / 1000; // Math.pow(10, -this.value);
+      update();
+    });
+
+// Projection select
 var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal"];
 
 var projectionSelect = mapControls.append("select")
@@ -260,37 +263,58 @@ var projections = projectionSelect.selectAll("option")
   .enter().append("option")
     .text(function(d) { return d; })
 
+var downloadButton = d3.select(".action.download")
+
+downloadButton.on("click", function() {
+  var url = window.URL.createObjectURL(new Blob(source.source, { "type" : "text\/json" }));
+
+      var a = d3.select("body")
+          .append('a')
+          .attr("class", "svg-crowbar")
+          .attr("download", filename + ".svg")
+          .attr("href", url)
+          .style("display", "none");
+
+      a.node().click();
+
+      setTimeout(function() {
+        window.URL.revokeObjectURL(url);
+      }, 10);
+})
+
+
+
 function processFiles() {
+  var options = {
+    "coordinate-system": "auto", // will be assigned by topojson.topology
+    "quantization": argv.quantization
+  };
+  var geoFeatures = {};
 
   files.forEach(function(f) {
-
     // Bring back original geojson
     f.json = JSON.parse(f.content);
-
-    var options = {
-      "coordinate-system": "auto", // will be assigned by topojson.topology
-      "quantization": argv.quantization
-    };
-
-    // Convert and merge GeoJSON features into a TopoJSON topology.
-    var o = {}
-    o[f.name] =  f.json;
-    f.topology = topojson.topology(o, options);
-
-    // Simplify.
-    if (+argv["simplify-proportion"] > 0) topojson.simplify(f.topology, {
-      "coordinate-system": options["coordinate-system"],
-      "retain-proportion": +argv["simplify-proportion"]
-    });
-
-    // Remove empty (or tiny) features.
-    topojson.filter(f.topology, {
-      "coordinate-system": options["coordinate-system"],
-      "minimum-area": 0
-    });
-
-    f.feature = topojson.feature(f.topology, f.topology.objects[f.name]);
+    geoFeatures[f.name] =  f.json;
   });
+  // Convert and merge GeoJSON features into a TopoJSON topology.
+  topology = topojson.topology(geoFeatures, options);
+
+  // Simplify.
+  if (+argv["simplify-proportion"] > 0) topojson.simplify(topology, {
+    "coordinate-system": options["coordinate-system"],
+    "retain-proportion": +argv["simplify-proportion"]
+  });
+
+  // Remove empty (or tiny) features.
+  topojson.filter(topology, {
+    "coordinate-system": options["coordinate-system"],
+    "minimum-area": 0
+  });
+
+  files.forEach(function(f) {
+    f.feature = topojson.feature(topology, topology.objects[f.name]);
+  });
+
 }
 
 function addJSON(j, filename) {
@@ -357,6 +381,7 @@ function draw() {
       .text(function(d){ return d.name; });
 
   newFile.append("span").attr("class", "close")
+      .text("X")
       .on("click", function(d) {
         removeFile(d.name);
       });
