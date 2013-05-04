@@ -26,13 +26,16 @@ h3 {
 
 .header td {
   padding: 0 10px;
+  vertical-align: top;
 }
 
 .branding {
-  font-size: 20px;
-  line-height: 18px;
-  width: 150px;
-  border-right: solid 1px #ddd;
+  font-family: Georgia;
+  color: rgb(220, 220, 220);
+  text-shadow: -1px -1px 0.5px rgba(0, 0, 0, 0.2), 1px 1px 0.5px rgba(255, 255, 255, 0.7);
+  font-size: 26px;
+  line-height: 48px;
+  width: 180px;
 }
 
 .description {
@@ -44,57 +47,97 @@ h3 {
   color: #999;
 }
 
+.input {
+  width: 200px;
+}
+
 .files {
-  height: 30px;
-  padding: 10px;
-  border: solid 1px #aaa;
-  background: rgba(0, 0, 0, 0.1);
-  box-shadow: inset 0px 1px 6px rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+  height: 26px;
+  width: 200px;
+  padding: 8px 0px 8px 48px;
+  border: solid 1px rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0px 1px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  line-height: 26px;
+  position: relative;
+}
+
+.action.load {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  height: 16px;
+  line-height: 12px;
+  font-size: 20px;
+  width: 16px;
+  display: block;
 }
 
 .file {
   display: inline-block;
   padding: 8px 30px 8px 10px;
   margin-right: 10px;
-  border: solid 1px #ccc;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
-  border: solid 1px #333;
-  color: white;
+  color: rgba(0, 0, 0, 0.8);
   white-space: nowrap;
   position: relative;
+  line-height: 10px;
 }
 
 .file .close {
+  color: rgba(255, 255, 255, 0.4);
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 4px;
+  right: 4px;
   display: inline-block;
-  border: solid 1px #ccc;
   padding: 4px;
-  background: rgba(255, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.1);
   width: 10px;
   height: 10px;
   border-radius: 3px;
   cursor: pointer;
+  font-size: 10px;
+  line-height: 10px;
+  text-align: center;
 }
 
 .simplify {
+  border-right: solid 1px #ddd;
+  border-left: solid 1px #ddd;
+  position: relative;
+}
+
+.simplify .note {
+  position: absolute;
+  right: 10px;
+  top: 4px;
+  font-size: 12px;
+}
+
+.simplify p {
+  margin: 4px 0 2px;
+}
+
+.simplify input {
+  margin-top: 8px;
 }
 
 .output {
-  width: 200px;
+  width: 140px;
 }
 
-.action.load {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.3);
-  border: solid 1px rgba(0, 0, 0, 0.1);
-  border-top: solid 1px rgba(255, 255, 255, 0.5);
-  border-bottom: solid 1px rgba(0, 0, 0, 0.3);
-  color: rgba(0, 0, 0, 0.3);
+.action.download {
+  display: block;
+  height: 26px;
+  width: 140px;
+  line-height: 26px;
+  padding: 10px 20px;
 }
+
+
+
 
 .argv {
   display: inline-block;
@@ -108,33 +151,26 @@ h3 {
 }
 
 .action {
-  display: inline-block;
+  text-decoration: none;
+  text-align: center;
   padding: 8px 10px;
-  background: #666;
-  color: white;
+  color: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
   cursor: pointer;
-  border: solid 1px #333;
+  text-decoration: none;
+  background: #666;
+  background-image: -webkit-linear-gradient(bottom, rgb(243,243,243) 0%, rgb(238,238,238) 36%, rgb(250,250,250) 72%);
+  border: solid 1px rgba(0, 0, 0, 0.2);
+  /*border-top: solid 1px white;*/
+  border-bottom: solid 1px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.action.download {
-  height: 30px;
-  line-height: 30px;
-  padding: 10px 20px;
-  border: solid 2px #CCC;
-  border-top: solid 1px white;
-  border-bottom: solid 1px rgba(0,0,0,0.2);
-  background: rgba(0,0,0,0.08);
-  box-shadow: 0 2px 3px rgba(0,0,0,0.2);
-  text-decoration: none;
-  color: rgba(0,0,0,0.3);
-  white-space: nowrap;
-}
 
 .map-container {
   position: absolute;
   right: 40px;
-  left: 210px;
+  left: 240px;
   top: 110px;
   bottom: 20px;
 }
@@ -142,11 +178,10 @@ h3 {
 .map-controls {
   position: absolute;
   top: 110px;
-  left: 10px;
+  left: 30px;
   bottom: 20px;
   width: 170px;
   padding-right: 10px;
-  border-right: solid 1px #ddd;
   background: rgba(255, 255, 255, 0.9);
 }
 
@@ -182,18 +217,18 @@ h3 {
   <tr>
     <td class="branding">
       <span>The Distillery</span><br>
-      <span class="description">A GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></span>
     </td>
     <td class="input">
       <div class="files">
-        <span class="action load">+</span>
-        <span class="note">Add GeoJSON file(s)</span>
+        <span class="note">Upload GeoJSON file(s)</span>
+        <a class="action load">+</a>
         <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
       </div>
     </td>
     <td class="simplify">
-      <span>Simplification</span>
-      <span><span class="value"></span>% of points removed</span>
+      <p>Simplify Geometry</p>
+      <span class="note"><span class="value"></span> percent of points retained</span>
+      <input type="range" class=""></input>
     </td>
     <td class="output">
       <a class="action download">Download TopoJSON</a>
@@ -203,9 +238,19 @@ h3 {
 
 <div class="map-container"></div>
 <div class="map-controls">
-  <button class="sample states">states</button>
-  <button class="sample counties">counties</button>
+  <p>Projection</p>
+  <select class="projection"></select>
+  <p>Zoom</p>
+  <button>+</button>
+  <button>-</button>
+  <p>Load Sample Data</p>
+  <button class="sample states">states</button><br>
+  <button class="sample counties">counties</button><br>
   <button class="sample world">world</button>
+  <p>About</p>
+  <p class="description">This is a simple GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></p>
+  <p class="description">Fork me on <a href="https://github.com/shancarter/distillery">Github</a></p>
+
 </div>
 </div>
 
@@ -251,16 +296,15 @@ var map = svg.append("g")
 var mapBackground = map.append("rect")
     .attr("class", "map-background");
 
-var simplificationSlider = d3.select(".simplify")
-  .append("input")
+var simplificationSlider = d3.select(".simplify input")
     .attr("type", "range")
     .attr("min", 10)
     .attr("max", 1000)
     .attr("step", 1)
-    .attr("value", (1 - argv["simplify-proportion"]) * 1000)
+    .attr("value", argv["simplify-proportion"] * 1000)
     .style("width", "100%")
     .on("change", function() {
-      argv["simplify-proportion"] = 1 - this.value / 1000;
+      argv["simplify-proportion"] = +this.value / 1000;
       d3.select(".simplify .value").text(this.value / 10)
       update();
     });
@@ -268,7 +312,7 @@ var simplificationSlider = d3.select(".simplify")
 // Projection select
 var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal"];
 
-var projectionSelect = mapControls.append("select")
+var projectionSelect = mapControls.select(".projection")
     .on("change", function() {
       projection = (d3.geo[projectionSelect.node().value])();
       path = d3.geo.path().projection(projection);
