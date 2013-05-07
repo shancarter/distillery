@@ -94,7 +94,7 @@ h3 {
   display: inline-block;
   padding: 8px 30px 8px 10px;
   margin-right: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
   border: solid 1px rgba(0, 0, 0, 0.1);
   color: rgba(0, 0, 0, 0.8);
@@ -210,23 +210,24 @@ h3 {
 .map {
   background: hsl(210, 50%, 70%);
   background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 20%, hsl(210, 50%, 63%) 100%);
-  background-image: -webkit-radial-gradient(center 0, 100% 100%, rgb(255, 251, 242) 20%, rgb(247, 241, 223) 100%);
+  /*background-image: -webkit-radial-gradient(center 0, 100% 100%, rgb(255, 251, 242) 20%, rgb(247, 241, 223) 100%);*/
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .map-background {
-  stroke: rgba(0, 0, 0, 0.2);
+  shape-rendering: crispEdges;
+  stroke: rgba(255, 255, 255, 0.8);
   stroke-width: 1px;
   fill: none;
 }
 
 .map path {
-  fill: rgba(0, 0, 0, 0.08);
-  stroke: rgba(0, 0, 0, 0.2);
+  fill: rgba(255, 255, 255, 0.1);
+  stroke: rgba(255, 255, 255, 0.7);
 }
 
 .map path:hover {
-  fill: rgba(0, 0, 0, 0.14);
+  fill: rgba(255, 255, 255, 0.14);
 }
 
 </style>
