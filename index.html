@@ -5,6 +5,7 @@
 
 body {
   font-family: "Helvetica Neue", Helvetica, Arial;
+  background: #f0f0f0;
   margin: 0;
   padding: 0;
 }
@@ -92,13 +93,15 @@ h3 {
 .file {
   display: inline-block;
   padding: 8px 30px 8px 10px;
-  margin-right: 10px;
+  margin-right: 6px;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
+  border: solid 1px #ccc;
   color: rgba(0, 0, 0, 0.8);
   white-space: nowrap;
   position: relative;
-  line-height: 10px;
+  line-height: 15px;
+  top: -3px;
 }
 
 .file .close {
@@ -115,9 +118,9 @@ h3 {
   padding: 4px;
   position: absolute;
   right: 4px;
+  top: 7px;
   text-align: center;
   text-shadow: -1px -1px 0.5px rgba(0, 0, 0, 0.4), 1px 1px 0.5px rgba(255, 255, 255, 0.2);
-  top: 4px;
   width: 10px;
 }
 
@@ -185,20 +188,19 @@ h3 {
 
 .map-container {
   position: absolute;
-  right: 40px;
-  left: 240px;
-  top: 110px;
+  right: 34px;
+  left: 236px;
+  top: 100px;
   bottom: 20px;
 }
 
 .map-controls {
   position: absolute;
-  top: 110px;
+  top: 100px;
   left: 30px;
   bottom: 20px;
   width: 170px;
   padding-right: 10px;
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .map-controls select {
