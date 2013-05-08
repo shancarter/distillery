@@ -202,12 +202,12 @@ a {
   opacity: 0.6;
   position: absolute;
   width: 100%;
+  top: 35%;
   height: 50px;
   color: white;
   border-radius: 4px;
   text-align: center;
   padding: 20px;
-  margin: 200px auto;
   line-height: 1.5em;
 }
 
@@ -274,8 +274,8 @@ a {
 
 <div class="map-container">
   <div class="default-load">
-    Drag GeoJSON files here, <br>use the uploader above, <br>or
-    <a href="#" class="sample states">use a sample file</a>
+    Drag GeoJSON files here, use the uploader above,<br>
+    or, if you’re feeling lazy, <a href="#" class="sample states">use a sample file</a>
   </div>
 </div>
 <div class="map-controls">
@@ -379,7 +379,7 @@ downloadButton.on("mouseover", function() {
 function addJSON(j, filename) {
   files.forEach(function(f, i) {
     if (f.name === filename) {
-      throw "File name already exists"
+      throw "Filename already exists"
     };
   });
   var file = {
