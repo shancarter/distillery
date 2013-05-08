@@ -586,6 +586,7 @@ function handleFiles(files) {
 //
 
 d3.select(".sample.states").on("click", function(){
+  d3.event.preventDefault();
   d3.json("samples/geojson/states.json", function(error, json) {
     addJSON(json, "states");
   })
