@@ -263,7 +263,7 @@ a {
     </td>
     <td class="simplify">
       <p>Simplify Geometry</p>
-      <span class="note"><span class="value"></span> percent of points retained</span>
+      <span class="note"><span class="value">100</span> percent of points retained</span>
       <input type="range" class=""></input>
     </td>
     <td class="output">
@@ -274,7 +274,7 @@ a {
 
 <div class="map-container">
   <div class="default-load">
-    Drag a GeoJSON file here, <br>use the uploader above, <br>or
+    Drag GeoJSON files here, <br>use the uploader above, <br>or
     <a href="#" class="sample states">use a sample file</a>
   </div>
 </div>
@@ -381,7 +381,7 @@ function addJSON(j, filename) {
     if (f.name === filename) {
       throw "File name already exists"
     };
-  })
+  });
   var file = {
     name: filename
   };
@@ -389,8 +389,16 @@ function addJSON(j, filename) {
     // Is TopoJSON
     // TODO convert to geojson and cache that result as a string into file.content
   } else {
-    file.json = j;
-    file.content = JSON.stringify(j);
+    if (j.type === "FeatureCollection") {
+      file.json = j;
+      file.content = JSON.stringify(j);
+    } else if(j.type === "Feature") {
+      file.json = {
+        type: "FeatureCollection",
+        features: [j]
+      };
+      file.content = JSON.stringify(file.json);
+    }
   }
   files.push(file);
   processFiles();
