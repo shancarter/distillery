@@ -15,6 +15,10 @@ h3 {
   padding: 0;
 }
 
+a {
+  color: #004276;
+}
+
 .header {
   padding: 15px 20px;
   font-size: 14px;
@@ -194,6 +198,19 @@ h3 {
   bottom: 20px;
 }
 
+.map-container .default-load {
+  opacity: 0.6;
+  position: absolute;
+  width: 100%;
+  height: 50px;
+  color: white;
+  border-radius: 4px;
+  text-align: center;
+  padding: 20px;
+  margin: 200px auto;
+  line-height: 1.5em;
+}
+
 .map-controls {
   position: absolute;
   top: 100px;
@@ -239,7 +256,7 @@ h3 {
     </td>
     <td class="input">
       <div class="files">
-        <span class="note">Upload GeoJSON file(s)</span>
+        <span class="note">Upload GeoJSON files</span>
         <a class="action load"><span class="icon"></span></a>
         <input type="file" class="file-input" multiple="multiple" style="visibility: hidden;position: absolute;"></input>
       </div>
@@ -255,20 +272,17 @@ h3 {
   </tr>
 </table>
 
-<div class="map-container"></div>
+<div class="map-container">
+  <div class="default-load">
+    Drag a GeoJSON file here, <br>use the uploader above, <br>or
+    <a href="#" class="sample states">use a sample file</a>
+  </div>
+</div>
 <div class="map-controls">
+  <p>About</p>
+  <p class="description">This is a simple GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a>. Fork me on <a href="https://github.com/shancarter/distillery">Github</a></p>
   <p>Projection</p>
   <select class="projection"></select>
-  <p>Zoom</p>
-  <button>+</button>
-  <button>-</button>
-  <p>Load Sample Data</p>
-  <button class="sample states">states</button><br>
-  <button class="sample counties">counties</button><br>
-  <button class="sample world">world</button>
-  <p>About</p>
-  <p class="description">This is a simple GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a></p>
-  <p class="description">Fork me on <a href="https://github.com/shancarter/distillery">Github</a></p>
 
 </div>
 </div>
@@ -465,6 +479,7 @@ function draw() {
 
 
   d3.select(".files .note").style("display", files.length ? "none" : null );
+  d3.select(".default-load").style("display", files.length ? "none" : null );
 
 
   var f = map.selectAll(".file")
@@ -565,18 +580,6 @@ function handleFiles(files) {
 d3.select(".sample.states").on("click", function(){
   d3.json("samples/geojson/states.json", function(error, json) {
     addJSON(json, "states");
-  })
-});
-
-d3.select(".sample.counties").on("click", function(){
-  d3.json("samples/geojson/counties.json", function(error, json) {
-    addJSON(json, "counties");
-  })
-});
-
-d3.select(".sample.world").on("click", function(){
-  d3.json("samples/geojson/world.json", function(error, json) {
-    addJSON(json, "world");
   })
 });
 
