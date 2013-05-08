@@ -53,23 +53,26 @@ a {
 }
 
 .input {
-  width: 200px;
+  width: 10px;
 }
 
 .files {
   height: 26px;
-  width: 200px;
   padding: 8px 0px 8px 48px;
   border: solid 1px rgba(0,0,0,0.15);
   background: rgba(0, 0, 0, 0.05);
   box-shadow: inset 0px 1px 8px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   line-height: 26px;
+  white-space: nowrap;
   position: relative;
+  -webkit-transform: width 2s linear;
 }
 
 .files .note {
   color: rgba(0, 0, 0, 0.5);
+  display: inline-block;
+  margin-right: 20px;
 }
 
 .action.load {
