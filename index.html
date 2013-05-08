@@ -25,7 +25,7 @@ a {
   line-height: 14px;
   background: #f0f0f0;
   border-top: solid 1px #ddd;
-  border-bottom: solid 1px #ddd;
+  border-bottom: solid 1px #ccc;
   width: 100%;
 }
 
@@ -223,6 +223,27 @@ a {
   padding-right: 10px;
 }
 
+.map-controls p {
+  margin: 0 0 10px;
+  color: #999;
+  font-size: 13px;
+  line-height: 1.5em;
+}
+
+.map-controls a {
+  opacity: 0.5;
+}
+
+.map-controls h4 {
+  font-weight: normal;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: #666;
+  margin: 10px 0 10px;
+  border-top: solid 1px #ddd;
+  padding-top: 10px;
+}
+
 .map-controls select {
   width: 100%;
 }
@@ -282,10 +303,10 @@ a {
   </div>
 </div>
 <div class="map-controls">
-  <p>About</p>
-  <p class="description">This is a simple GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a>. Fork me on <a href="https://github.com/shancarter/distillery">Github</a></p>
-  <p>Projection</p>
+  <p>This is a simple GUI for <a href="https://github.com/mbostock/topojson">TopoJSON</a>. Fork me on <a href="https://github.com/shancarter/distillery">Github</a></p>
+  <h4>Projection</h4>
   <select class="projection"></select>
+  <h4>Details</h4>
 
 </div>
 </div>
