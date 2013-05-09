@@ -199,6 +199,11 @@ a {
   left: 236px;
   top: 100px;
   bottom: 20px;
+  background: hsl(210, 50%, 70%);
+  background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 20%, hsl(210, 50%, 63%) 100%);
+  /*background-image: -webkit-radial-gradient(center 0, 100% 100%, rgb(255, 251, 242) 20%, rgb(247, 241, 223) 100%);*/
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+
 }
 
 .map-container .default-load {
@@ -249,17 +254,13 @@ a {
 }
 
 .map {
-  background: hsl(210, 50%, 70%);
-  background-image: -webkit-radial-gradient(center 0, 100% 100%, hsl(210, 50%, 70%) 20%, hsl(210, 50%, 63%) 100%);
-  /*background-image: -webkit-radial-gradient(center 0, 100% 100%, rgb(255, 251, 242) 20%, rgb(247, 241, 223) 100%);*/
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .map-background {
   shape-rendering: crispEdges;
   stroke: rgba(255, 255, 255, 0.8);
   stroke-width: 1px;
-  fill: none;
+  fill: rgba(255, 255, 255, 0);
 }
 
 .map path {
@@ -269,6 +270,17 @@ a {
 
 .map path:hover {
   fill: rgba(255, 255, 255, 0.14);
+}
+
+.crosshairs line {
+  stroke: white;
+  stroke-opacity: 0.2;
+  fill: none;
+}
+
+.crosshairs text {
+  fill: white;
+  font-size: 10px;
 }
 
 </style>
@@ -320,7 +332,8 @@ window.URL = (window.URL || window.webkitURL);
 var width = 500,
     height = 500;
 
-var format = d3.format("1f")
+var format = d3.format(".1f"),
+    formatLatLon = d3.format(".2f");
 
 var projection = d3.geo.mercator();
 
@@ -381,6 +394,47 @@ var projections = projectionSelect.selectAll("option")
     .data(availableProjections)
   .enter().append("option")
     .text(function(d) { return d; })
+
+// crosshairs
+var crosshairs = map.append("g")
+    .attr("class", "crosshairs");
+
+var latLonReadout = crosshairs.append("text");
+
+var vCrosshair = crosshairs.append("line")
+
+var hCrosshair = crosshairs.append("line")
+
+map.on("mouseover", function() {
+  if (files.length) {
+    crosshairs.style("display", null);
+
+    map.on("mousemove", function() {
+      var mousePosition = d3.mouse(this),
+          latLon = projection.invert(mousePosition);
+
+      latLonReadout
+        .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
+        .attr("transform", "translate(" + (mousePosition[0] + 15) + "," + (mousePosition[1] + 15) + ")")
+
+      vCrosshair
+          .attr("x1", mousePosition[0])
+          .attr("x2", mousePosition[0])
+          .attr("y2", height);
+
+      hCrosshair
+          .attr("x2", width)
+          .attr("y1", mousePosition[1])
+          .attr("y2", mousePosition[1]);
+    });
+  }
+});
+
+svg.on("mouseout", function() {
+  svg.on("mousemove", null);
+  crosshairs.style("display", "none")
+})
+
 
 // Download
 // TODO add download geojson/topojson/svg select
