@@ -272,9 +272,16 @@ a {
   fill: rgba(255, 255, 255, 0.14);
 }
 
-.crosshairs line {
+.map path.graticule{
+  fill: none;
   stroke: white;
-  stroke-opacity: 0.2;
+  stroke-opacity: 0.4;
+  stroke-dasharray: 2, 2;
+}
+
+.map .crosshairs path {
+  stroke: white;
+  stroke-opacity: 0.4;
   fill: none;
 }
 
@@ -337,6 +344,9 @@ var format = d3.format(".1f"),
 
 var projection = d3.geo.mercator();
 
+var bounds = [[-180, 90],[180, -90]],
+    centroid = [0, 0];
+
 var path = d3.geo.path()
     .projection(projection);
 
@@ -362,6 +372,8 @@ var svg = mapContainer.append("svg")
 
 var map = svg.append("g")
     .attr("transform", "translate(20, 20)");
+
+var graticule = d3.geo.graticule();
 
 var mapBackground = map.append("rect")
     .attr("class", "map-background");
@@ -393,7 +405,10 @@ var projectionSelect = mapControls.select(".projection")
 var projections = projectionSelect.selectAll("option")
     .data(availableProjections)
   .enter().append("option")
-    .text(function(d) { return d; })
+    .text(function(d) { return d; });
+
+map.append("path")
+    .attr("class", "graticule")
 
 // crosshairs
 var crosshairs = map.append("g")
@@ -401,9 +416,7 @@ var crosshairs = map.append("g")
 
 var latLonReadout = crosshairs.append("text");
 
-var vCrosshair = crosshairs.append("line")
-
-var hCrosshair = crosshairs.append("line")
+var crosshairLines = crosshairs.append("path");
 
 map.on("mouseover", function() {
   if (files.length) {
@@ -417,15 +430,19 @@ map.on("mouseover", function() {
         .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
         .attr("transform", "translate(" + (mousePosition[0] + 15) + "," + (mousePosition[1] + 15) + ")")
 
-      vCrosshair
-          .attr("x1", mousePosition[0])
-          .attr("x2", mousePosition[0])
-          .attr("y2", height);
-
-      hCrosshair
-          .attr("x2", width)
-          .attr("y1", mousePosition[1])
-          .attr("y2", mousePosition[1]);
+      crosshairLines.attr("d", path({
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [latLon[0] , bounds[0][1]],
+            [latLon[0] , bounds[1][1]]
+          ],
+          [
+            [bounds[0][1] , latLon[1]],
+            [bounds[0][0] , latLon[1]]
+          ]
+        ]
+      }));
     });
   }
 });
@@ -530,19 +547,49 @@ function processFiles() {
 
 function resetZoom() {
   if (files.length) {
+    var projectionName = projectionSelect.node().value;
+
     var feature = files[files.length - 1].feature;
     projection
         .scale(1)
         .translate([0, 0]);
 
+    if (projectionName === "albersUsa") {
+      bounds = [[-130, 50], [-60, 23]];
+    } else {
+      bounds = d3.geo.bounds(feature);
+    }
+
     var b = path.bounds(feature),
         s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
         t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
-    projection
+    if (projectionName === "conicEqualArea") {
+      projection
+        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+        .translate([width / 2, height / 2])
+        .scale(s);
+    } else if(projectionName === "conicConformal") {
+      projection
+        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+        // TODO .parallels([29.5, 45.5])
+        .translate([width / 2, height / 2])
+        .scale(s);
+    } else {
+      projection
         .scale(s)
         .translate(t);
-  };
+    }
+
+    graticule.extent(bounds)
+
+    d3.select(".graticule")
+      .datum(graticule)
+      .attr("d", path)
+  }
+
 
 }
 
@@ -566,6 +613,7 @@ function draw() {
 
   d3.select(".files .note").style("display", files.length ? "none" : null );
   d3.select(".default-load").style("display", files.length ? "none" : null );
+  d3.select(".graticule").style("display", files.length ? null : "none" );
 
 
   var f = map.selectAll(".file")
