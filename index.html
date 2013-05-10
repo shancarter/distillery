@@ -279,12 +279,6 @@ a {
   stroke-dasharray: 2, 2;
 }
 
-.map .crosshairs path {
-  stroke: white;
-  stroke-opacity: 0.4;
-  fill: none;
-}
-
 .crosshairs text {
   fill: white;
   font-size: 10px;
@@ -416,12 +410,9 @@ var crosshairs = map.append("g")
 
 var latLonReadout = crosshairs.append("text");
 
-var crosshairLines = crosshairs.append("path");
-
 map.on("mouseover", function() {
   if (files.length) {
-    crosshairs.style("display", null);
-
+    crosshairs.style("display", null)
     map.on("mousemove", function() {
       var mousePosition = d3.mouse(this),
           latLon = projection.invert(mousePosition);
@@ -430,19 +421,6 @@ map.on("mouseover", function() {
         .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
         .attr("transform", "translate(" + (mousePosition[0] + 15) + "," + (mousePosition[1] + 15) + ")")
 
-      crosshairLines.attr("d", path({
-        "type": "MultiLineString",
-        "coordinates": [
-          [
-            [latLon[0] , bounds[0][1]],
-            [latLon[0] , bounds[1][1]]
-          ],
-          [
-            [bounds[0][1] , latLon[1]],
-            [bounds[0][0] , latLon[1]]
-          ]
-        ]
-      }));
     });
   }
 });
