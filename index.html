@@ -334,7 +334,8 @@ var width = 500,
     height = 500;
 
 var format = d3.format(".1f"),
-    formatLatLon = d3.format(".2f");
+    formatLatLon = d3.format(".2f"),
+    formatPercent = d3.format(".1%");
 
 var projection = d3.geo.mercator();
 
@@ -380,9 +381,9 @@ var simplificationSlider = d3.select(".simplify input")
     .attr("value", argv["simplify-proportion"] * 1000)
     .style("width", "100%")
     .on("change", function() {
-      argv["simplify-proportion"] = +this.value / 1000;
-      d3.select(".simplify .value").text(this.value / 10)
-      update();
+      var value = argv["simplify-proportion"] = 1 - Math.sqrt(1 - this.value / 1000);
+      d3.select(".simplify .value").text(formatPercent(value));
+      if (topology) simplify(), draw();
     });
 
 // Projection select
@@ -437,7 +438,7 @@ var downloadButton = d3.select(".action.download")
 
 downloadButton.on("mouseover", function() {
   if (files.length) {
-    var url = window.URL.createObjectURL(new Blob([JSON.stringify(topology)], { "type" : "application\/json" }));
+    var url = window.URL.createObjectURL(new Blob([JSON.stringify(simplified)], { "type" : "application\/json" }));
     downloadButton
         .attr("download", files.map(function(f) { return f.name; }).join("-") + ".json")
         .attr("href", url)
@@ -477,7 +478,6 @@ function addJSON(j, filename) {
   processFiles();
   resetZoom();
   draw();
-
 }
 
 function removeFile(name) {
@@ -491,7 +491,7 @@ function removeFile(name) {
 }
 
 function processFiles() {
-  var options = {
+  options = {
     "coordinate-system": "auto", // will be assigned by topojson.topology
     "quantization": argv.quantization
   };
@@ -506,21 +506,12 @@ function processFiles() {
   topology = topojson.topology(geoFeatures, options);
 
   // Simplify.
-  if (+argv["simplify-proportion"] > 0) topojson.simplify(topology, {
-    "coordinate-system": options["coordinate-system"],
-    "retain-proportion": +argv["simplify-proportion"]
+  // if (+argv["simplify-proportion"] > 0)
+  topojson.presimplify(topology, {
+    "coordinate-system": options["coordinate-system"]
   });
 
-  // Remove empty (or tiny) features.
-  topojson.filter(topology, {
-    "coordinate-system": options["coordinate-system"],
-    "minimum-area": 0
-  });
-
-  files.forEach(function(f) {
-    f.feature = topojson.feature(topology, topology.objects[f.name]);
-  });
-
+  simplify();
 }
 
 function resetZoom() {
@@ -609,7 +600,9 @@ function draw() {
       .append("title")
         .text(function(d) { return d.id; });
     feature.exit().remove();
-    feature.attr("d", path);
+    feature.attr("d", function(d) {
+      return path(d);
+    });
   })
 }
 
@@ -617,10 +610,30 @@ function draw() {
 // Events
 //
 
-// Update arguments
-function update() {
-  processFiles();
-  draw();
+// Update simplified topology.
+function simplify() {
+  // processFiles();
+
+  // Simplify (as a deep copy).
+  simplified = {
+    type: "Topology",
+    transform: topology.transform,
+    objects: topology.objects,
+    arcs: topojson.resimplify(topology, {
+      "coordinate-system": options["coordinate-system"],
+      "retain-proportion": +argv["simplify-proportion"]
+    }).arcs
+  };
+
+  // Remove empty (or tiny) features.
+  topojson.filter(topology, {
+    "coordinate-system": options["coordinate-system"],
+    "minimum-area": 0
+  });
+
+  files.forEach(function(f) {
+    f.feature = topojson.feature(simplified, simplified.objects[f.name]);
+  });
 }
 
 // Window resize
