@@ -300,7 +300,7 @@ a {
     </td>
     <td class="simplify">
       <p>Simplify Geometry</p>
-      <span class="note"><span class="value">100</span> percent of points retained</span>
+      <span class="note"><span class="value">100</span> percent of points retained / <span class="size">0KB</span></span>
       <input type="range" class=""></input>
     </td>
     <td class="output">
@@ -335,7 +335,8 @@ var width = 500,
 
 var format = d3.format(".1f"),
     formatLatLon = d3.format(".2f"),
-    formatPercent = d3.format(".1%");
+    formatPercent = d3.format(".1%"),
+    formatSize = d3.format("s");
 
 var projection = d3.geo.mercator();
 
@@ -438,7 +439,18 @@ var downloadButton = d3.select(".action.download")
 
 downloadButton.on("mouseover", function() {
   if (files.length) {
+
+    // Remove empty (or tiny) features.
+    // TODO Filter on draw? But that will require duplicating topology.
+    topojson.filter(simplified, {
+      "coordinate-system": options["coordinate-system"]
+    });
+
     var url = window.URL.createObjectURL(new Blob([JSON.stringify(simplified)], { "type" : "application\/json" }));
+
+    // Restore non-filtered content.
+    processFiles();
+
     downloadButton
         .attr("download", files.map(function(f) { return f.name; }).join("-") + ".json")
         .attr("href", url)
@@ -505,8 +517,7 @@ function processFiles() {
   // Convert and merge GeoJSON features into a TopoJSON topology.
   topology = topojson.topology(geoFeatures, options);
 
-  // Simplify.
-  // if (+argv["simplify-proportion"] > 0)
+  // Pre-simplify.
   topojson.presimplify(topology, {
     "coordinate-system": options["coordinate-system"]
   });
@@ -594,7 +605,7 @@ function draw() {
   f.each(function(d) {
     var g = d3.select(this);
     var feature = g.selectAll("path")
-        .data(function(d) { return d.feature.features }); // TODO assumes feature is a FeatureCollection
+        .data(function(d) { return d.feature.features; }); // TODO assumes feature is a FeatureCollection
     feature.enter()
       .append("path")
       .append("title")
@@ -625,11 +636,7 @@ function simplify() {
     }).arcs
   };
 
-  // Remove empty (or tiny) features.
-  topojson.filter(topology, {
-    "coordinate-system": options["coordinate-system"],
-    "minimum-area": 0
-  });
+  d3.select(".simplify .size").text(formatSize(d3.round(JSON.stringify(simplified).length, -3)) + "B");
 
   files.forEach(function(f) {
     f.feature = topojson.feature(simplified, simplified.objects[f.name]);
