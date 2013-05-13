@@ -382,7 +382,7 @@ var simplificationSlider = d3.select(".simplify input")
     .attr("value", argv["simplify-proportion"] * 1000)
     .style("width", "100%")
     .on("change", function() {
-      var value = argv["simplify-proportion"] = 1 - Math.sqrt(1 - this.value / 1000);
+      var value = argv["simplify-proportion"] = this.value / 1000;
       d3.select(".simplify .value").text(formatPercent(value));
       if (topology) simplify(), draw();
     });
