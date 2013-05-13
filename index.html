@@ -253,7 +253,7 @@ a {
   width: 100%;
 }
 
-.map {
+/*.map {
 }
 
 .map-background {
@@ -282,7 +282,7 @@ a {
 .crosshairs text {
   fill: white;
   font-size: 10px;
-}
+}*/
 
 </style>
 
@@ -343,9 +343,6 @@ var projection = d3.geo.mercator();
 var bounds = [[-180, 90],[180, -90]],
     centroid = [0, 0];
 
-var path = d3.geo.path()
-    .projection(projection);
-
 var inputData,
     files = [],
     parsedFiles = [],
@@ -361,18 +358,22 @@ var mapContainer = d3.select(".map-container");
 
 var mapControls = d3.select(".map-controls");
 
-var svg = mapContainer.append("svg")
-    .attr("class", "map")
-    .attr("width", width)
-    .attr("height", height);
+var canvas = mapContainer.append("canvas")
+    .attr("class", "map");
 
-var map = svg.append("g")
-    .attr("transform", "translate(20, 20)");
+var context = canvas.node().getContext("2d");
 
-var graticule = d3.geo.graticule();
+var path = d3.geo.path()
+    .projection(projection)
+    .context(context);
 
-var mapBackground = map.append("rect")
-    .attr("class", "map-background");
+// var map = svg.append("g")
+//     .attr("transform", "translate(20, 20)");
+
+// var graticule = d3.geo.graticule();
+
+// var mapBackground = map.append("rect")
+//     .attr("class", "map-background");
 
 var simplificationSlider = d3.select(".simplify input")
     .attr("type", "range")
@@ -392,8 +393,7 @@ var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEq
 
 var projectionSelect = mapControls.select(".projection")
     .on("change", function() {
-      projection = (d3.geo[projectionSelect.node().value])();
-      path = d3.geo.path().projection(projection);
+      path.projection(projection = (d3.geo[projectionSelect.node().value])());
       resetZoom();
       draw();
     });
@@ -403,34 +403,34 @@ var projections = projectionSelect.selectAll("option")
   .enter().append("option")
     .text(function(d) { return d; });
 
-map.append("path")
-    .attr("class", "graticule")
+// map.append("path")
+//     .attr("class", "graticule")
 
 // crosshairs
-var crosshairs = map.append("g")
-    .attr("class", "crosshairs");
+// var crosshairs = map.append("g")
+//     .attr("class", "crosshairs");
 
-var latLonReadout = crosshairs.append("text");
+// var latLonReadout = crosshairs.append("text");
 
-map.on("mouseover", function() {
-  if (files.length) {
-    crosshairs.style("display", null)
-    map.on("mousemove", function() {
-      var mousePosition = d3.mouse(this),
-          latLon = projection.invert(mousePosition);
+// map.on("mouseover", function() {
+//   if (files.length) {
+//     // crosshairs.style("display", null)
+//     map.on("mousemove", function() {
+//       var mousePosition = d3.mouse(this),
+//           latLon = projection.invert(mousePosition);
 
-      latLonReadout
-        .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
-        .attr("transform", "translate(" + (mousePosition[0] + 15) + "," + (mousePosition[1] + 15) + ")")
+//       latLonReadout
+//         .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
+//         .attr("transform", "translate(" + (mousePosition[0] + 15) + "," + (mousePosition[1] + 15) + ")")
 
-    });
-  }
-});
+//     });
+//   }
+// });
 
-svg.on("mouseout", function() {
-  svg.on("mousemove", null);
-  crosshairs.style("display", "none")
-})
+// svg.on("mouseout", function() {
+//   svg.on("mousemove", null);
+//   crosshairs.style("display", "none")
+// })
 
 
 // Download
@@ -475,16 +475,16 @@ function addJSON(j, filename) {
     // Is TopoJSON
     // TODO convert to geojson and cache that result as a string into file.content
   } else {
-    if (j.type === "FeatureCollection") {
-      file.json = j;
-      file.content = JSON.stringify(j);
-    } else if(j.type === "Feature") {
-      file.json = {
-        type: "FeatureCollection",
-        features: [j]
-      };
-      file.content = JSON.stringify(file.json);
-    }
+    // if (j.type === "FeatureCollection") {
+    file.json = j;
+    file.content = JSON.stringify(j);
+    // } else if(j.type === "Feature") {
+    //   file.json = {
+    //     type: "FeatureCollection",
+    //     features: [j]
+    //   };
+    //   file.content = JSON.stringify(file.json);
+    // }
   }
   files.push(file);
   processFiles();
@@ -514,6 +514,7 @@ function processFiles() {
     f.json = JSON.parse(f.content);
     geoFeatures[f.name] =  f.json;
   });
+
   // Convert and merge GeoJSON features into a TopoJSON topology.
   topology = topojson.topology(geoFeatures, options);
 
@@ -529,7 +530,8 @@ function resetZoom() {
   if (files.length) {
     var projectionName = projectionSelect.node().value;
 
-    var feature = files[files.length - 1].feature;
+    var feature = files[files.length - 1].mesh;
+
     projection
         .scale(1)
         .translate([0, 0]);
@@ -546,28 +548,28 @@ function resetZoom() {
 
     if (projectionName === "conicEqualArea") {
       projection
-        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
-        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
-        .translate([width / 2, height / 2])
-        .scale(s);
+          .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+          .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+          .translate([width / 2, height / 2])
+          .scale(s);
     } else if(projectionName === "conicConformal") {
       projection
-        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
-        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
-        // TODO .parallels([29.5, 45.5])
-        .translate([width / 2, height / 2])
-        .scale(s);
+          .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+          .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+          // TODO .parallels([29.5, 45.5])
+          .translate([width / 2, height / 2])
+          .scale(s);
     } else {
       projection
-        .scale(s)
-        .translate(t);
+          .scale(s)
+          .translate(t);
     }
 
-    graticule.extent(bounds)
+    // graticule.extent(bounds)
 
-    d3.select(".graticule")
-      .datum(graticule)
-      .attr("d", path)
+    // d3.select(".graticule")
+    //   .datum(graticule)
+    //   .attr("d", path)
   }
 
 
@@ -593,28 +595,39 @@ function draw() {
 
   d3.select(".files .note").style("display", files.length ? "none" : null );
   d3.select(".default-load").style("display", files.length ? "none" : null );
-  d3.select(".graticule").style("display", files.length ? null : "none" );
+  // d3.select(".graticule").style("display", files.length ? null : "none" );
 
 
-  var f = map.selectAll(".file")
-      .data(files, function(d) { return d.name; });
+  context.clearRect(-20, -20, width + 20, height + 20);
+  // context.translate(20, 20);
+  // context.fillRect(0, 0, width, height);
+  // context.strokeStyle = "#fff";
 
-  f.enter().append("g").attr("class", "file");
-  f.exit().remove();
+  context.beginPath();
+  files.forEach(function(f) {
+    path(f.mesh);
+  });
+  context.stroke();
 
-  f.each(function(d) {
-    var g = d3.select(this);
-    var feature = g.selectAll("path")
-        .data(function(d) { return d.feature.features; }); // TODO assumes feature is a FeatureCollection
-    feature.enter()
-      .append("path")
-      .append("title")
-        .text(function(d) { return d.id; });
-    feature.exit().remove();
-    feature.attr("d", function(d) {
-      return path(d);
-    });
-  })
+  // var f = map.selectAll(".file")
+  //     .data(files, function(d) { return d.name; });
+
+  // f.enter().append("g").attr("class", "file");
+  // f.exit().remove();
+
+  // f.each(function(d) {
+  //   var g = d3.select(this);
+  //   var feature = g.selectAll("path")
+  //       .data(function(d) { return d.feature.features; }); // TODO assumes feature is a FeatureCollection
+  //   feature.enter()
+  //     .append("path")
+  //     .append("title")
+  //       .text(function(d) { return d.id; });
+  //   feature.exit().remove();
+  //   feature.attr("d", function(d) {
+  //     return path(d);
+  //   });
+  // })
 }
 
 //
@@ -639,7 +652,7 @@ function simplify() {
   d3.select(".simplify .size").text(formatSize(d3.round(JSON.stringify(simplified).length, -3)) + "B");
 
   files.forEach(function(f) {
-    f.feature = topojson.feature(simplified, simplified.objects[f.name]);
+    f.mesh = topojson.feature(simplified, simplified.objects[f.name]);
   });
 }
 
@@ -653,8 +666,11 @@ function resize() {
   var bbox = mapContainer.node().getBoundingClientRect();
   width = bbox.width - 40;
   height = bbox.height - 40;
-  svg.attr("width", bbox.width).attr("height", bbox.height);
-  mapBackground.attr("width", width).attr("height", height);
+  canvas.attr("width", bbox.width).attr("height", bbox.height);
+  context.strokeStyle = "#fff";
+  context.lineJoin = "round";
+  context.translate(20, 20);
+  // mapBackground.attr("width", width).attr("height", height);
   resetZoom();
 }
 
