@@ -311,7 +311,7 @@ a {
 
 <div class="map-container">
   <div class="default-load">
-    Drag GeoJSON files here, use the uploader above,<br>
+    Drag GeoJSON/TopoJSON files here, use the uploader above,<br>
     or, if you’re feeling lazy, <a href="#" class="sample states">use a sample file</a>
   </div>
 </div>
@@ -473,7 +473,10 @@ function addJSON(j, filename) {
   };
   if (j.type === "Topology") {
     // Is TopoJSON
-    // TODO convert to geojson and cache that result as a string into file.content
+    for (key in j.objects) {
+      addJSON(topojson.feature(j, j.objects[key]), key);
+    }
+    return;
   } else {
     if (j.type === "FeatureCollection") {
       file.json = j;
