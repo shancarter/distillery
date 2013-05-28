@@ -533,7 +533,11 @@ function resetZoom() {
   if (files.length) {
     var projectionName = projectionSelect.node().value;
 
-    var feature = files[files.length - 1].feature;
+    var feature = {
+      type: "FeatureCollection",
+      features: d3.merge(files.map(function(file) { return file.feature.features; }))
+    };
+
     projection
         .scale(1)
         .translate([0, 0]);
