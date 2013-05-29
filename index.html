@@ -463,6 +463,20 @@ downloadButton.on("mouseover", function() {
 });
 
 function addJSON(j, filename) {
+  if (j.type === "Topology") {
+    // Is TopoJSON
+    for (var key in j.objects) {
+      addFile(topojson.feature(j, j.objects[key]), key);
+    }
+  } else {
+    addFile(j, filename);
+  }
+  processFiles();
+  resetZoom();
+  draw();
+}
+
+function addFile(j, filename) {
   files.forEach(function(f, i) {
     if (f.name === filename) {
       throw "Filename already exists"
@@ -471,28 +485,17 @@ function addJSON(j, filename) {
   var file = {
     name: filename
   };
-  if (j.type === "Topology") {
-    // Is TopoJSON
-    for (key in j.objects) {
-      addJSON(topojson.feature(j, j.objects[key]), key);
-    }
-    return;
-  } else {
-    if (j.type === "FeatureCollection") {
-      file.json = j;
-      file.content = JSON.stringify(j);
-    } else if(j.type === "Feature") {
-      file.json = {
-        type: "FeatureCollection",
-        features: [j]
-      };
-      file.content = JSON.stringify(file.json);
-    }
+  if (j.type === "FeatureCollection") {
+    file.json = j;
+    file.content = JSON.stringify(j);
+  } else if(j.type === "Feature") {
+    file.json = {
+      type: "FeatureCollection",
+      features: [j]
+    };
+    file.content = JSON.stringify(file.json);
   }
   files.push(file);
-  processFiles();
-  resetZoom();
-  draw();
 }
 
 function removeFile(name) {
