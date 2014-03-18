@@ -269,7 +269,7 @@ a {
 }
 
 .map path:hover {
-  fill: rgba(255, 255, 255, 0.14);
+  fill: rgba(255, 0, 0, 0.1);
 }
 
 .map path.graticule{
@@ -388,11 +388,16 @@ var simplificationSlider = d3.select(".simplify input")
     });
 
 // Projection select
-var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal"];
+var availableProjections = ["mercator", "albersUsa", "equirectangular", "conicEqualArea", "conicConformal", "none"];
 
 var projectionSelect = mapControls.select(".projection")
     .on("change", function() {
-      projection = (d3.geo[projectionSelect.node().value])();
+      var selectedProjection;
+      if ((selectedProjection = projectionSelect.node().value) == "none") {
+        projection = null;
+      } else {
+        projection = (d3.geo[selectedProjection])();
+      }
       path = d3.geo.path().projection(projection);
       resetZoom();
       draw();
@@ -417,7 +422,7 @@ map.on("mouseover", function() {
     crosshairs.style("display", null)
     map.on("mousemove", function() {
       var mousePosition = d3.mouse(this),
-          latLon = projection.invert(mousePosition);
+          latLon = projection ? projection.invert(mousePosition) : mousePosition;
 
       latLonReadout
         .text(formatLatLon(latLon[0]) + ", " + formatLatLon(latLon[1]))
@@ -541,37 +546,39 @@ function resetZoom() {
       features: d3.merge(files.map(function(file) { return file.feature.features; }))
     };
 
-    projection
+    if (projection) {
+      projection
         .scale(1)
         .translate([0, 0]);
 
-    if (projectionName === "albersUsa") {
-      bounds = [[-130, 50], [-60, 23]];
-    } else {
-      bounds = d3.geo.bounds(feature);
-    }
+      if (projectionName === "albersUsa") {
+        bounds = [[-130, 50], [-60, 23]];
+      } else {
+        bounds = d3.geo.bounds(feature);
+      }
 
-    var b = path.bounds(feature),
-        s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-        t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+      var b = path.bounds(feature),
+          s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+          t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
-    if (projectionName === "conicEqualArea") {
-      projection
-        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
-        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
-        .translate([width / 2, height / 2])
-        .scale(s);
-    } else if(projectionName === "conicConformal") {
-      projection
-        .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
-        .center([0, (bounds[0][1] + bounds[1][1]) / 2])
-        // TODO .parallels([29.5, 45.5])
-        .translate([width / 2, height / 2])
-        .scale(s);
-    } else {
-      projection
-        .scale(s)
-        .translate(t);
+      if (projectionName === "conicEqualArea") {
+        projection
+          .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+          .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+          .translate([width / 2, height / 2])
+          .scale(s);
+      } else if(projectionName === "conicConformal") {
+        projection
+          .rotate([-(bounds[0][0] + bounds[1][0]) / 2, 0])
+          .center([0, (bounds[0][1] + bounds[1][1]) / 2])
+          // TODO .parallels([29.5, 45.5])
+          .translate([width / 2, height / 2])
+          .scale(s);
+      } else {
+        projection
+          .scale(s)
+          .translate(t);
+      }
     }
 
     graticule.extent(bounds)
